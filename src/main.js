@@ -5,7 +5,7 @@ import { Player } from './player.js';
 import { Gun } from './gun.js';
 import { Bullet } from './bullet.js';
 import { getSetting } from './settings.js';
-import { initUI } from './ui.js';
+import { initUI, UIManager, updateCustomCursorPosition } from './ui.js';
 
 class Game {
     constructor() {
@@ -105,7 +105,7 @@ class Game {
             onQuitToMainMenu: () => this.quitToMainMenu(),
             onRefreshKeybinds: () => refreshKeybinds(), // New
         });
-        initInput(UIManager.updateCustomCursorPosition); // Moved after initUI
+        initInput(updateCustomCursorPosition); // Moved after initUI
         setCursorActive(true); // Activate cursor on menu screen
         this.playMenuMusic(); // Play music on menu screen
 
