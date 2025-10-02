@@ -69,7 +69,38 @@
 - **Data Storage**: Only local preferences, no network communication
 - **HTTPS**: Recommended for production deployment
 
+## Version 0.03 - Critical Bug Fixes (December 2024)
+
+### JavaScript Error Resolution
+- **Issue**: `ReferenceError: initUI is not defined` and `UIManager is not defined`
+- **Root Cause**: Missing import statements in main.js
+- **Solution**: Added proper imports for initUI, UIManager, and updateCustomCursorPosition
+- **Status**: ✅ Fixed and deployed
+
+### Technical Fixes Applied
+- [x] **Import Statement Fix**: Added missing imports in main.js
+- [x] **UI Module Restoration**: Restored complete ui.js file functionality
+- [x] **Input System Fix**: Fixed initInput callback parameter
+- [x] **Git Deployment**: All fixes committed and pushed to GitHub
+
+### Browser Cache Issue Resolution
+- **Problem**: Users experiencing cached JavaScript errors
+- **Solution**: Hard refresh required (Ctrl+F5) to clear browser cache
+- **Documentation**: Added troubleshooting steps for cache clearing
+
+### Current Status
+- **Game State**: Fully functional browser-based 3D FPS
+- **Error Status**: All JavaScript errors resolved
+- **Performance**: 60fps target maintained
+- **Compatibility**: Chrome 80+, Firefox 75+, Safari 13+, Edge 80+
+
+### Known Issues Resolved
+- ✅ initUI function not defined
+- ✅ UIManager not defined
+- ✅ updateCustomCursorPosition callback missing
+- ✅ Browser cache causing stale error display
+
 ---
 
 **Last Updated**: December 2024  
-**Next Update**: After Git initialization and first commit
+**Next Update**: After Phase 2 development (AI bots)

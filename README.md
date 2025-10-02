@@ -8,8 +8,8 @@ A modern browser-based 3D first-person shooter built with Three.js. Experience f
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/ArenaFPS.git
-   cd ArenaFPS
+   git clone https://github.com/AfyKirby1/Voxel-Arena.git
+   cd Voxel-Arena
    ```
 
 2. **Open in browser**
@@ -18,6 +18,12 @@ A modern browser-based 3D first-person shooter built with Three.js. Experience f
 
 3. **Start playing!**
    - Click "Single Player" → Select a map → Start shooting!
+
+### ⚠️ Troubleshooting
+If you see JavaScript errors or a black background:
+- **Hard refresh**: Press `Ctrl + F5` (Windows) or `Cmd + Shift + R` (Mac)
+- **Clear cache**: Right-click refresh button → "Empty Cache and Hard Reload"
+- **Incognito mode**: Try opening in a private/incognito window
 
 ## 🎯 Features
 
@@ -139,8 +145,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/ArenaFPS/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/ArenaFPS/discussions)
+- **Issues**: [GitHub Issues](https://github.com/AfyKirby1/Voxel-Arena/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/AfyKirby1/Voxel-Arena/discussions)
 - **Email**: motorcycler14@yahoo.com
 
 ---

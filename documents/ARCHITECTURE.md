@@ -2,19 +2,19 @@
 
 ## Overview
 
-This project is a 3D Arena FPS game built with HTML, CSS, and JavaScript, using the Three.js library for rendering. The application runs entirely in the browser.
+This project is a 3D Arena FPS game built with HTML, CSS, and JavaScript. Three.js is used for 3D rendering, loaded globally via a `<script>` tag in `index.html`. The application runs entirely in the browser.
 
 ## Components
 
--   **`index.html`**: The main entry point of the application. It contains the canvas for the game and the HTML structure for the UI menus.
+-   **`index.html`**: The main entry point of the application. It contains the canvas for the game, the HTML structure for the UI menus, and loads the global Three.js library.
 -   **`style.css`**: Provides styling for all UI elements, including menus and the in-game HUD.
--   **`src/main.js`**: The core of the game. It initializes the Three.js scene, manages the main game loop, controls the overall game state, and manages the lifecycle of bullets.
+-   **`src/main.js`**: The core of the game. It initializes the Three.js scene (relying on the global `THREE` object), manages the main game loop, controls the overall game state, and manages the lifecycle of bullets.
 -   **`src/arena.js`**: Acts as a dispatcher for arena creation. It imports specific arena definitions and, based on a `mapId`, calls the appropriate arena creation function.
--   **`src/arena1.js`**: Defines the first arena, including its geometry, materials, and obstacles.
--   **`src/arena2.js`**: Defines the second, larger, and more complex arena with varied obstacles and colors.
--   **`src/player.js`**: Handles player creation, movement, and first-person camera controls, including the new "Walk Wobble" effect.
--   **`src/gun.js`**: Manages the player's weapon, including its model, iron sights, firing mechanism, and sound effects. It creates bullets when fired.
--   **`src/bullet.js`**: Defines the `Bullet` class, including its appearance (dark orange sphere), movement logic, and lifetime.
+-   **`src/arena1.js`**: Defines the first arena, including its geometry, materials, and obstacles (relying on the global `THREE` object).
+-   **`src/arena2.js`**: Defines the second, larger, and more complex arena with varied obstacles and colors (relying on the global `THREE` object).
+-   **`src/player.js`**: Handles player creation, movement, and first-person camera controls, including the new "Walk Wobble" effect (relying on the global `THREE` object).
+-   **`src/gun.js`**: Manages the player's weapon, including its model, iron sights, firing mechanism, and sound effects. It creates bullets when fired (relying on the global `THREE` object).
+-   **`src/bullet.js`**: Defines the `Bullet` class, including its appearance (dark orange sphere), movement logic, and lifetime (relying on the global `THREE` object).
 -   **`src/ui.js`**: Controls the visibility and interaction of all UI components (start menu, settings, pause menu, HUD), including dynamic population of map selection buttons and custom toggle switches for settings.
 -   **`src/input.js`**: Captures and processes all keyboard and mouse input, managed by a customizable keybinding system.
 -   **`src/settings.js`**: Manages persistent game settings like audio volume and keybindings, potentially using browser `localStorage`.
@@ -24,7 +24,22 @@ This project is a 3D Arena FPS game built with HTML, CSS, and JavaScript, using 
 The game flow has been updated to provide more structured navigation from the main menu:
 *   **Start Menu:** Now features 'Single Player' and 'Multiplayer' options. The 'Multiplayer' option is currently a placeholder.
 *   **Single Player Flow:** Selecting 'Single Player' transitions to a new 'Map Selection' menu.
-*   **Map Selection Menu:** Allows the player to choose a map before starting the game. It dynamically displays available maps (e.g., 'Classic Arena', 'Big Arena') as visually distinct buttons. Selected maps are highlighted with a glowing effect. A 'Start Map' button initiates the game with the selected map, and a 'Back' button returns to the main menu.
+*   **Map Selection Menu:** Allows the player to choose a map before starting the game. It dynamically displays available maps (e.g., 'Classic Arena', 'Big Arena') as visually distinct buttons with glowing highlights for selection. A 'Start Map' button initiates the game with the selected map, and a 'Back' button returns to the main menu.
+
+## Settings Management
+
+To provide a robust and user-friendly settings experience, a temporary settings system has been implemented:
+*   **Temporary Settings (`tempSettings`):** All changes made in the settings UI (volume, keybinds, video options) are applied to a temporary copy of the settings (`tempSettings`) first.
+*   **Apply/Cancel:** Changes only take effect in the game and are saved to `localStorage` when the 'Apply' button is clicked. The 'Cancel' button discards all pending changes and reverts the UI to the last applied settings.
+*   **Confirmation Prompt:** A temporary "Settings Applied!" message is displayed after successful application.
+*   **Keybind Rebinding:** Keybinds can be rebound by clicking their respective buttons. A tooltip instructs the player, and the button displays "..." during the rebinding process. The system captures the next key or mouse click to set the new bind.
+
+## Audio System
+
+*   **Main Menu Music:** A background music track (`audio/main.wav`) plays and loops when the game is in a menu state.
+*   **Fade-in Effect:** The music fades in smoothly from a low volume (quarter of target volume) to the full set volume over 1 second when it starts playing.
+*   **Volume Control:** A "Music Volume" slider in the audio settings allows players to adjust the music's volume.
+*   **Autoplay Policy:** Due to browser autoplay policies, music playback is initiated (AudioContext resumed) on the first user gesture on the page.
 
 ## Custom GUI and Mouse System (Soft Pause Menu)
 

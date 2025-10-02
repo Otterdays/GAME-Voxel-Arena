@@ -1,6 +1,7 @@
 
 import { getAllKeybinds } from './settings.js';
-import { updateCustomCursorPosition } from './ui.js'; // Import the new UI function
+
+// Removed: import { updateCustomCursorPosition } from './ui.js';
 
 const state = {
     move: {
@@ -21,6 +22,7 @@ const state = {
 
 let keyMap = {};
 let keybinds = {};
+let _updateCustomCursorPosition = null; // Store the passed function
 
 function updateKeyMap() {
     keybinds = getAllKeybinds();
@@ -87,14 +89,17 @@ function handleMouseMove(e) {
         cursorX = Math.max(0, Math.min(window.innerWidth, cursorX));
         cursorY = Math.max(0, Math.min(window.innerHeight, cursorY));
 
-        updateCustomCursorPosition(cursorX, cursorY);
+        if (_updateCustomCursorPosition) {
+            _updateCustomCursorPosition(cursorX, cursorY);
+        }
     } else {
         state.look.dx += e.movementX;
         state.look.dy += e.movementY;
     }
 }
 
-export function initInput() {
+export function initInput(updateCustomCursorPositionCallback) {
+    _updateCustomCursorPosition = updateCustomCursorPositionCallback; // Store the callback
     updateKeyMap();
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
@@ -126,7 +131,9 @@ export function setCursorActive(active) {
         // Initialize cursor position to center of screen when activated
         cursorX = window.innerWidth / 2;
         cursorY = window.innerHeight / 2;
-        updateCustomCursorPosition(cursorX, cursorY);
+        if (_updateCustomCursorPosition) {
+            _updateCustomCursorPosition(cursorX, cursorY);
+        }
     }
 }
 
