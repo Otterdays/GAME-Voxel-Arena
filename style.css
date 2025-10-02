@@ -1,0 +1,286 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: 'Press Start 2P', cursive;
+    color: #fff;
+    cursor: none; /* Hide default cursor */
+}
+
+canvas {
+    display: block;
+}
+
+#ui-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none; /* Allow clicks to pass through by default */
+}
+
+.menu {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 40px;
+    border-radius: 10px;
+    border: 2px solid #00ff00;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+    pointer-events: auto; /* Enable clicks for menu elements */
+}
+
+.menu.active {
+    display: flex;
+}
+
+.menu h1,
+.menu h2 {
+    color: #00ff00;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px rgba(0, 255, 0, 0.7);
+}
+
+.menu button {
+    background-color: #00ff00;
+    color: #000;
+    border: none;
+    padding: 15px 30px;
+    margin: 10px 0;
+    font-size: 1.2em;
+    cursor: none !important;
+    border-radius: 5px;
+    transition: background-color 0.3s, color 0.3s;
+    pointer-events: auto; /* Enable clicks for buttons */
+}
+
+.menu button:hover {
+    background-color: #00cc00;
+    color: #fff;
+}
+
+#hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none; /* Allow clicks to pass through */
+}
+
+#crosshair {
+    font-size: 2em;
+    color: #00ff00;
+    text-shadow: 0 0 5px rgba(0, 255, 0, 0.7);
+}
+
+.settings-section {
+    margin-bottom: 20px;
+    width: 100%;
+    text-align: center;
+}
+
+.settings-section h3 {
+    color: #00ff00;
+    margin-bottom: 10px;
+}
+
+.settings-section label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.settings-section input[type="range"] {
+    width: 80%;
+    -webkit-appearance: none;
+    height: 8px;
+    background: #00ff00;
+    outline: none;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    border-radius: 5px;
+}
+
+.settings-section input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border: 2px solid #00ff00;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+#keybinds-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+#keybinds-container > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 200px;
+}
+
+.settings-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 250px; /* Adjust width as needed */
+    margin-bottom: 15px;
+    position: relative; /* For tooltip positioning */
+}
+
+.keybind-button-wrapper {
+    position: relative;
+}
+
+.keybind-tooltip {
+    position: absolute;
+    bottom: -25px; /* Position below the button */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    white-space: nowrap;
+    display: none; /* Hidden by default */
+    pointer-events: none; /* Don't block clicks */
+    z-index: 10;
+}
+
+.keybind-button-wrapper:hover .keybind-tooltip {
+    display: block;
+}
+
+.keybind-button.rebinding {
+    background-color: #ffcc00; /* Highlight during rebind */
+    color: #000;
+}
+
+.instruction-text {
+    font-size: 0.9em;
+    color: #00ff00;
+    margin-top: -10px;
+    margin-bottom: 10px;
+}
+
+#settings-message {
+    color: #00ff00;
+    font-size: 1em;
+    margin-top: 10px;
+    height: 20px; /* Reserve space */
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+#settings-message.show {
+    opacity: 1;
+}
+
+.settings-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.settings-actions button {
+    padding: 10px 20px;
+    font-size: 1em;
+    margin: 0;
+}
+
+#keybinds-container button {
+    padding: 5px 10px;
+    font-size: 1em;
+    margin: 0;
+}
+
+/* Custom Toggle Button Styles */
+.toggle-switch {
+    display: flex;
+    border: 2px solid #00ff00;
+    border-radius: 5px;
+    overflow: hidden;
+    width: 120px; /* Adjust width as needed */
+    height: 35px; /* Adjust height as needed */
+    pointer-events: auto;
+}
+
+.toggle-switch button {
+    flex: 1;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #00ff00;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font-size: 1em;
+    cursor: none !important;
+    transition: background-color 0.2s, color 0.2s;
+    border-radius: 0; /* Remove individual button border-radius */
+}
+
+.toggle-switch button.active {
+    background-color: #00ff00;
+    color: #000;
+}
+
+.toggle-switch button:hover:not(.active) {
+    background-color: rgba(0, 255, 0, 0.2);
+}
+
+#map-display {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Spacing between map buttons */
+    margin: 20px 0;
+}
+
+.map-select-button {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #00ff00;
+    border: 2px solid #00ff00;
+    padding: 10px 20px;
+    font-size: 1.1em;
+    cursor: none !important;
+    border-radius: 5px;
+    transition: background-color 0.3s, box-shadow 0.3s;
+    width: 200px;
+}
+
+.map-select-button:hover {
+    background-color: rgba(0, 255, 0, 0.2);
+}
+
+.map-select-button.active {
+    background-color: #00ff00;
+    color: #000;
+    box-shadow: 0 0 15px #00ff00; /* Glowing effect */
+}
+
+#custom-cursor {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border: 2px solid #00ff00;
+    border-radius: 50%;
+    pointer-events: none; /* Cursor itself should not block events */
+    z-index: 1000;
+    display: none; /* Hidden by default */
+    transform: translate(-50%, -50%); /* Center the cursor on its coordinates */
+}

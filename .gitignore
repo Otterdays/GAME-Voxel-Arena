@@ -1,0 +1,247 @@
+# ArenaFPS - Git Ignore File
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+.classpath
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories (if using npm/yarn in future)
+node_modules/
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.test
+.env.local
+.env.production
+
+# Build outputs (if using build tools in future)
+dist/
+build/
+out/
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+
+# Local development files
+local/
+dev/
+test/
+
+# Browser cache
+.cache/
+
+# Webpack (if implemented)
+.webpack/
+
+# Parcel (if implemented)
+.parcel-cache/
+
+# Rollup (if implemented)
+.rollup.cache/
+
+# Vite (if implemented)
+.vite/
+
+# TypeScript (if implemented)
+*.tsbuildinfo
+
+# ESLint (if implemented)
+.eslintcache
+
+# Prettier (if implemented)
+.prettierignore
+
+# Stylelint (if implemented)
+.stylelintcache
+
+# Husky (if implemented)
+.husky/
+
+# Lint-staged (if implemented)
+.lintstagedrc*
+
+# Jest (if implemented)
+coverage/
+
+# Cypress (if implemented)
+cypress/videos/
+cypress/screenshots/
+
+# Playwright (if implemented)
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Storybook (if implemented)
+storybook-static/
+
+# Documentation build (if implemented)
+docs/_build/
+site/
+
+# Local configuration overrides
+config.local.js
+settings.local.js
+
+# Development database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Local server files
+server.log
+access.log
+error.log
+
+# Performance monitoring
+.clinic/
+.0x/
+
+# Security files (never commit these)
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Game-specific ignores
+# Save files (if implemented)
+saves/
+*.save
+
+# Screenshots
+screenshots/
+
+# Replays (if implemented)
+replays/
+
+# Mod files (if implemented)
+mods/
+
+# Asset source files (if using build process)
+src/assets/source/
+*.psd
+*.ai
+*.sketch
+
+# Compiled assets (if using build process)
+assets/compiled/
+
+# Local development server
+dev-server/
+
+# Hot reload files
+.hot-update.*
+
+# Webpack dev server
+webpack-dev-server/
+
+# Local environment
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE specific
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
