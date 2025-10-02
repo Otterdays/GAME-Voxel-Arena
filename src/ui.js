@@ -1,4 +1,3 @@
-
 import { getSetting, setSetting, getAllKeybinds, initTempSettings, applySettings, resetTempSettings, getTempSetting } from './settings.js';
 
 const ui = {
