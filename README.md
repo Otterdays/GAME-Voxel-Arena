@@ -1,156 +1,130 @@
 # 🎮 ArenaFPS
 
-A modern browser-based 3D first-person shooter built with Three.js. Experience fast-paced arena combat in a retro-futuristic environment with smooth 60fps gameplay.
+> **A smooth, browser-based 3D shooter that just works.**
 
-![ArenaFPS](main.png)
+Jump into fast-paced arena combat without downloads, installations, or complex setup. Built with vanilla JavaScript and Three.js, ArenaFPS delivers 60fps gameplay directly in your browser.
 
-## 🚀 Quick Start
+![ArenaFPS Screenshot](main.png)
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/AfyKirby1/Voxel-Arena.git
-   cd Voxel-Arena
-   ```
+## ⚡ Quick Start
 
-2. **Open in browser**
-   - Simply open `index.html` in any modern web browser
-   - Or serve locally: `python -m http.server 8000` then visit `http://localhost:8000`
+**Just open and play:**
+```bash
+# Clone the repo
+git clone https://github.com/AfyKirby1/Voxel-Arena.git
+cd Voxel-Arena
 
-3. **Start playing!**
-   - Click "Single Player" → Select a map → Start shooting!
+# Open in browser (Windows)
+launch.bat
 
-### ⚠️ Troubleshooting
-If you see JavaScript errors or a black background:
-- **Hard refresh**: Press `Ctrl + F5` (Windows) or `Cmd + Shift + R` (Mac)
-- **Clear cache**: Right-click refresh button → "Empty Cache and Hard Reload"
-- **Incognito mode**: Try opening in a private/incognito window
+# Or manually
+python -m http.server 8000
+# Then visit http://localhost:8000
+```
 
-## 🎯 Features
+**That's it.** No build tools, no dependencies, no hassle.
 
-### Core Gameplay
-- **First-Person Controls**: Smooth WASD movement with mouse look
-- **Weapon System**: Realistic gun mechanics with procedural sound effects
-- **Physics Engine**: Jumping, gravity, and projectile ballistics
-- **Multiple Arenas**: Two distinct maps with unique layouts and obstacles
+## 🎯 What You Get
 
-### Technical Highlights
-- **60fps Performance**: Optimized Three.js rendering pipeline
-- **Custom UI System**: Retro-futuristic green-on-black interface
-- **Audio Engine**: Procedural sound generation and background music
-- **Settings Persistence**: Customizable keybinds and preferences
-- **Responsive Design**: Works on desktop and mobile browsers
+### Core Experience
+- **Smooth FPS Controls** - WASD movement with precise mouse look
+- **Tactical Combat** - Jump, strafe, and shoot in arena environments  
+- **Two Unique Maps** - Classic Arena and Big Arena with different layouts
+- **Weapon System** - Realistic gun mechanics with procedural audio
 
-### Arena Maps
-- **Classic Arena**: 100x100 unit arena with strategic cover points
-- **Big Arena**: 120x120 unit arena with elevated platforms and ramps
+### Polish & Features
+- **Retro-Futuristic UI** - Clean green-on-black interface
+- **Customizable Settings** - Rebind any key, adjust audio levels
+- **Avatar Viewer** - Check out your character model in 3D
+- **Responsive Design** - Works on desktop and mobile browsers
 
 ## 🎮 Controls
 
-| Action | Default Key | Description |
-|--------|-------------|-------------|
-| Move Forward | `W` | Move forward |
-| Move Backward | `S` | Move backward |
-| Strafe Left | `A` | Strafe left |
-| Strafe Right | `D` | Strafe right |
-| Jump | `Space` | Jump |
-| Fire | `Left Mouse` | Shoot weapon |
-| Look Around | `Mouse` | Camera control |
-| Pause | `Escape` | Pause game |
+| Action | Default | What It Does |
+|--------|---------|--------------|
+| **Move** | `WASD` | Walk around the arena |
+| **Look** | `Mouse` | Aim your weapon |
+| **Jump** | `Space` | Leap over obstacles |
+| **Shoot** | `Left Click` | Fire your weapon |
+| **Pause** | `Escape` | Pause the game |
 
-*All controls are fully customizable in the Settings menu*
+*All controls are fully customizable in Settings*
 
-## 🛠️ Technical Stack
+## 🏗️ Built Right
 
-- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
-- **3D Engine**: Three.js r128
-- **Audio**: Web Audio API
-- **Storage**: localStorage for settings persistence
-- **Build**: No build process required - pure vanilla JavaScript
+### Technical Highlights
+- **Pure JavaScript** - No frameworks, no build process
+- **Three.js Powered** - Hardware-accelerated 3D graphics
+- **Modular Design** - Clean, maintainable code structure
+- **60fps Target** - Smooth performance on modern hardware
+
+### Browser Support
+- ✅ **Chrome 80+** - Full feature support
+- ✅ **Firefox 75+** - Full feature support  
+- ✅ **Safari 13+** - Full feature support
+- ✅ **Edge 80+** - Full feature support
+
+## 🚀 What's Next
+
+This is **Phase 1** - a solid single-player foundation. Coming in **Phase 2**:
+
+- 🤖 **AI Bots** - Computer opponents to fight
+- 🌐 **Multiplayer** - Online battles with friends
+- 🗺️ **More Maps** - Additional arena environments
+- 🔫 **Weapon Variety** - Different guns and mechanics
 
 ## 📁 Project Structure
 
 ```
-ArenaFPS/
-├── 📄 index.html              # Main entry point
-├── 🎨 style.css               # Complete UI styling
-├── 🖼️ main.png                # Game icon
-├── 🔊 audio/
-│   └── main.wav               # Background music
-├── 📁 src/
-│   ├── 🎮 main.js             # Core game engine
-│   ├── 🏟️ arena.js            # Arena dispatcher
-│   ├── 🏟️ arena1.js           # Classic arena
-│   ├── 🏟️ arena2.js           # Big arena
-│   ├── 👤 player.js           # Player character
-│   ├── 🔫 gun.js              # Weapon system
-│   ├── 💥 bullet.js           # Projectile physics
-│   ├── 🖥️ ui.js               # User interface
-│   ├── ⌨️ input.js             # Input handling
-│   └── ⚙️ settings.js          # Settings management
-└── 📚 documents/
-    ├── 🏗️ ARCHITECTURE.md     # Technical architecture
-    ├── 📋 SBOM.md             # Software dependencies
-    └── 📝 SCRATCHPAD.md       # Development notes
+Voxel-Arena/
+├── 🎮 index.html          # Main game file
+├── 🎨 style.css           # Retro UI styling  
+├── 🚀 launch.bat          # Windows launcher
+├── 📁 src/                # Game modules
+│   ├── 🎯 main.js         # Core engine
+│   ├── 👤 player.js       # Player controls
+│   ├── 🔫 glock.js        # Weapon system
+│   ├── 🏟️ arena*.js       # Map definitions
+│   └── 🖥️ ui.js           # Interface
+└── 📚 documents/          # Documentation
 ```
 
-## 🎨 Customization
+## 🛠️ For Developers
 
-### Settings Menu
-- **Audio**: Master volume and music volume controls
-- **Video**: Walk wobble effect toggle
-- **Keybinds**: Fully customizable control scheme
+### Getting Started
+```bash
+# Clone and serve locally
+git clone https://github.com/AfyKirby1/Voxel-Arena.git
+cd Voxel-Arena
+launch.bat  # Windows
+# or
+python -m http.server 8000  # Manual
+```
 
-### Adding New Maps
-1. Create a new arena file in `src/arena*.js`
-2. Export a `createArena*` function
-3. Add the map to `arena.js` dispatcher
-4. Register in `ui.js` available maps array
+### Architecture
+- **9 Modular Components** - Clean separation of concerns
+- **ES6 Modules** - Modern JavaScript imports
+- **Three.js r128** - Latest stable version
+- **Web Audio API** - Procedural sound generation
 
-## 🚧 Development Roadmap
-
-### Phase 2: AI & Multiplayer
-- [ ] AI Bot System: Computer-controlled opponents
-- [ ] Multiplayer Networking: Online multiplayer support
-- [ ] Additional Maps: More arena environments
-- [ ] Weapon Variety: Different weapon types
-- [ ] Game Modes: Team deathmatch, capture the flag
-
-### Future Enhancements
-- [ ] Particle Effects: Muzzle flash, explosions
-- [ ] Sound Design: Environmental audio, footsteps
-- [ ] Graphics Improvements: Better textures, lighting
-- [ ] Mobile Optimization: Touch controls
-- [ ] Performance: WebGL optimizations
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-### Development Setup
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes
-4. Test thoroughly in multiple browsers
-5. Submit a pull request
+### Contributing
+We welcome contributions! The codebase is designed to be:
+- **Easy to understand** - Clear module structure
+- **Easy to extend** - Add new maps, weapons, features
+- **Easy to debug** - Comprehensive logging and error handling
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - feel free to use, modify, and distribute.
 
 ## 🙏 Acknowledgments
 
-- **Three.js Community**: For the amazing 3D graphics library
-- **Web Audio API**: For browser-native audio processing
-- **Open Source**: Built with open web technologies
-
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/AfyKirby1/Voxel-Arena/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/AfyKirby1/Voxel-Arena/discussions)
-- **Email**: motorcycler14@yahoo.com
+- **Three.js** - Amazing 3D graphics library
+- **Web Audio API** - Browser-native audio processing
+- **Open Web** - Built with standard web technologies
 
 ---
 
-**Made with ❤️ for the web gaming community**
+**Ready to play?** Just open `index.html` in your browser and start shooting! 🎯
 
 *Currently optimized for Windows 11 systems*

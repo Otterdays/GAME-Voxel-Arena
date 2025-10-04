@@ -1,7 +1,7 @@
 import { getInputState, clearFireInput } from './input.js';
 import { getSetting } from './settings.js';
 
-export class Gun {
+export class Glock {
     constructor(camera, game) {
         this.camera = camera;
         this.game = game;

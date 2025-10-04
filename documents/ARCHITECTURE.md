@@ -12,12 +12,16 @@ This project is a 3D Arena FPS game built with HTML, CSS, and JavaScript. Three.
 -   **`src/arena.js`**: Acts as a dispatcher for arena creation. It imports specific arena definitions and, based on a `mapId`, calls the appropriate arena creation function.
 -   **`src/arena1.js`**: Defines the first arena, including its geometry, materials, and obstacles (relying on the global `THREE` object).
 -   **`src/arena2.js`**: Defines the second, larger, and more complex arena with varied obstacles and colors (relying on the global `THREE` object).
--   **`src/player.js`**: Handles player creation, movement, and first-person camera controls, including the new "Walk Wobble" effect (relying on the global `THREE` object).
--   **`src/gun.js`**: Manages the player's weapon, including its model, iron sights, firing mechanism, and sound effects. It creates bullets when fired (relying on the global `THREE` object).
+-   **`src/player.js`**: Handles player creation, movement, and first-person camera controls. It uses the character model from `src/character.js`.
+-   **`src/glock.js`**: Manages the player's weapon, including its model, iron sights, firing mechanism, and sound effects. It creates bullets when fired (relying on the global `THREE` object).
 -   **`src/bullet.js`**: Defines the `Bullet` class, including its appearance (dark orange sphere), movement logic, and lifetime (relying on the global `THREE` object).
 -   **`src/ui.js`**: Controls the visibility and interaction of all UI components (start menu, settings, pause menu, HUD), including dynamic population of map selection buttons and custom toggle switches for settings.
 -   **`src/input.js`**: Captures and processes all keyboard and mouse input, managed by a customizable keybinding system.
 -   **`src/settings.js`**: Manages persistent game settings like audio volume and keybindings, potentially using browser `localStorage`.
+-   **`src/structures.js`**: Defines the `Structure` class, a data representation for all world objects that can be collided with.
+-   **`src/physics.js`**: Handles collision detection between the player and structures.
+-   **`src/character.js`**: Defines the procedural "bean" character model, created by combining a `CylinderGeometry` and two `SphereGeometry` objects.
+-   **`src/avatar.js`**: Handles the logic for the avatar editor, including creating a new Three.js scene and rendering the player model.
 
 ## Game Flow and Menu Navigation
 
@@ -32,7 +36,22 @@ To provide a robust and user-friendly settings experience, a temporary settings 
 *   **Temporary Settings (`tempSettings`):** All changes made in the settings UI (volume, keybinds, video options) are applied to a temporary copy of the settings (`tempSettings`) first.
 *   **Apply/Cancel:** Changes only take effect in the game and are saved to `localStorage` when the 'Apply' button is clicked. The 'Cancel' button discards all pending changes and reverts the UI to the last applied settings.
 *   **Confirmation Prompt:** A temporary "Settings Applied!" message is displayed after successful application.
-*   **Keybind Rebinding:** Keybinds can be rebound by clicking their respective buttons. A tooltip instructs the player, and the button displays "..." during the rebinding process. The system captures the next key or mouse click to set the new bind.
+*   **Keybind Rebinding:** Keybinds can be rebound by clicking their respective buttons. A tooltip instructs the player, and the button displays "..." during the rebinding process. The system captures the next key or mouse click to set the new bind. When the settings are applied, the input system is notified to refresh the keybindings.
+
+## Structure and Collision System
+
+To prepare for a future map editor and to implement proper collision, a new structure and collision system has been added:
+*   **`src/structures.js`:** A `Structure` class defines the data representation for all world objects that can be collided with. This separates the object's data (position, size, type) from its visual representation.
+*   **`src/physics.js`:** A `checkCollision` function uses Axis-Aligned Bounding Box (AABB) intersection tests to detect collisions between the player and structures.
+*   **Arena Generation:** The arena files (`src/arena1.js`, `src/arena2.js`) now define an array of `Structure` objects. The `src/arena.js` file then uses this array to generate the visible Three.js meshes, keeping the data and rendering separate.
+## Player Collision:** The `src/player.js` file now uses the `checkCollision` function to detect and prevent movement into structures.
+
+## Avatar Editor
+
+A new avatar editor feature has been added to allow players to view their character model.
+*   **Avatar Button:** An "Avatar" button has been added to the main menu.
+*   **Avatar Menu:** Clicking the "Avatar" button opens a new menu that displays a 3D model of the player.
+*   **`src/avatar.js`:** This new file contains the logic for the avatar editor. It creates a separate Three.js scene to render the player model, which is then displayed in a `div` in the avatar menu.
 
 ## Audio System
 

@@ -1,5 +1,7 @@
+import { createCharacterModel } from './character.js';
 import { getInputState, clearLookInput } from './input.js';
 import { getSetting } from './settings.js';
+import { checkCollision } from './physics.js';
 
 // Player constants
 const PLAYER_RADIUS = 0.5;
@@ -9,18 +11,15 @@ const MOUSE_SENSITIVITY = 0.002;
 const JUMP_FORCE = 8.0; // Upward velocity when jumping
 const GRAVITY = 20.0; // Downward acceleration
 
-
 export class Player {
-    constructor(camera, scene) {
+    constructor(camera, scene, structures) {
         this.camera = camera;
         this.scene = scene;
+        this.structures = structures;
 
         // Player model
-        const playerGeometry = new THREE.CylinderGeometry(PLAYER_RADIUS, PLAYER_RADIUS, PLAYER_HEIGHT, 16);
-        const playerMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-        this.mesh = new THREE.Mesh(playerGeometry, playerMaterial);
-        this.mesh.position.set(0, PLAYER_HEIGHT / 2, 0);
-        this.mesh.castShadow = true;
+        this.mesh = createCharacterModel();
+        this.mesh.position.set(0, 0, 0);
         this.scene.add(this.mesh);
 
         // Camera setup
@@ -65,9 +64,18 @@ export class Player {
             this.velocity.z = moveDirection.z * PLAYER_SPEED;
         }
 
-        // Apply velocity
+        // Apply velocity and check for collisions
+        const oldPosition = this.mesh.position.clone();
+
         this.mesh.position.x += this.velocity.x * deltaTime;
+        if (checkCollision(this, this.structures)) {
+            this.mesh.position.x = oldPosition.x;
+        }
+
         this.mesh.position.z += this.velocity.z * deltaTime;
+        if (checkCollision(this, this.structures)) {
+            this.mesh.position.z = oldPosition.z;
+        }
 
         // Jump and Gravity
         if (input.move.jump && this.isOnGround) {
@@ -77,11 +85,13 @@ export class Player {
         this.velocityY -= GRAVITY * deltaTime;
         this.mesh.position.y += this.velocityY * deltaTime;
 
-        // Simple ground check
-        if (this.mesh.position.y < PLAYER_HEIGHT / 2) {
-            this.mesh.position.y = PLAYER_HEIGHT / 2;
+        // Ground check and collision response
+        if (checkCollision(this, this.structures)) {
+            this.mesh.position.y = oldPosition.y;
             this.velocityY = 0;
             this.isOnGround = true;
+        } else {
+            this.isOnGround = false;
         }
 
         // Simple friction

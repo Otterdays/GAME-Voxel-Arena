@@ -284,3 +284,11 @@ canvas {
     display: none; /* Hidden by default */
     transform: translate(-50%, -50%); /* Center the cursor on its coordinates */
 }
+
+#avatar-display {
+    width: 300px;
+    height: 400px;
+    background-color: #222;
+    border: 2px solid #00ff00;
+    margin-bottom: 20px;
+}

@@ -1,4 +1,6 @@
-import { getSetting, setSetting, getAllKeybinds, initTempSettings, applySettings, resetTempSettings, getTempSetting } from './settings.js';
+import { initAvatarEditor } from './avatar.js';
+import { refreshKeybinds } from './input.js';
+import { getSetting, setSetting, getAllKeybinds, initTempSettings, applySettings, resetTempSettings, getTempSetting, getTempAllKeybinds } from './settings.js';
 
 const ui = {
     container: document.getElementById('ui-container'),
@@ -16,6 +18,7 @@ const ui = {
     applySettingsButton: document.getElementById('apply-settings-button'), // New
     cancelSettingsButton: document.getElementById('cancel-settings-button'), // New
     settingsMessage: document.getElementById('settings-message'), // New
+    avatarMenu: document.getElementById('avatar-menu'),
 };
 
 let onStartSinglePlayerGame = () => {};
@@ -46,7 +49,7 @@ export function updateCustomCursorPosition(x, y) {
 }
 
 function showMenu(menuId) {
-    [ui.startMenu, ui.settingsMenu, ui.pauseMenu, ui.mapSelectionMenu].forEach(menu => {
+    [ui.startMenu, ui.settingsMenu, ui.pauseMenu, ui.mapSelectionMenu, ui.avatarMenu].forEach(menu => {
         if (menu.id === menuId) {
             menu.classList.add('active');
             if (menuId === 'settings-menu') {
@@ -54,6 +57,8 @@ function showMenu(menuId) {
                 populateKeybinds(); // Re-populate to reflect temp settings
                 populateVideoSettings(); // Re-populate to reflect temp settings
                 // populateAudioSettings(); // If we had a separate audio populate function
+            } else if (menuId === 'avatar-menu') {
+                initAvatarEditor();
             }
         } else {
             menu.classList.remove('active');
@@ -68,13 +73,13 @@ function showMenu(menuId) {
 }
 
 function showHUD() {
-    [ui.startMenu, ui.settingsMenu, ui.pauseMenu, ui.mapSelectionMenu].forEach(menu => menu.classList.remove('active'));
+    [ui.startMenu, ui.settingsMenu, ui.pauseMenu, ui.mapSelectionMenu, ui.avatarMenu].forEach(menu => menu.classList.remove('active'));
     ui.hud.style.display = 'block';
     hideCustomCursor();
 }
 
 function populateKeybinds() {
-    const keybinds = getAllKeybinds();
+    const keybinds = getTempAllKeybinds();
     ui.keybindsContainer.innerHTML = '';
 
     let isRebinding = false;
@@ -245,7 +250,10 @@ export function initUI(callbacks) {
     document.getElementById('single-player-button').addEventListener('click', () => UIManager.showMapSelectionMenu());
     document.getElementById('multiplayer-button').addEventListener('click', () => console.log('Multiplayer not implemented yet'));
     document.getElementById('settings-button').addEventListener('click', () => showMenu('settings-menu'));
+    document.getElementById('avatar-button').addEventListener('click', () => UIManager.showAvatarMenu());
     document.getElementById('quit-button').addEventListener('click', () => window.close()); // Simple quit
+
+    document.getElementById('avatar-back-button').addEventListener('click', () => showMenu('start-menu'));
 
     document.getElementById('map-selection-back-button').addEventListener('click', () => showMenu('start-menu'));
     document.getElementById('start-map-button').addEventListener('click', () => onStartMap(selectedMapId));
@@ -256,6 +264,7 @@ export function initUI(callbacks) {
 
     ui.applySettingsButton.addEventListener('click', () => {
         applySettings();
+        refreshKeybinds(); // Refresh the keybinds in the input system
         // Show confirmation message
         ui.settingsMessage.textContent = 'Settings Applied!';
         ui.settingsMessage.classList.add('show');
@@ -285,6 +294,7 @@ export const UIManager = {
     showPauseMenu: () => showMenu('pause-menu'),
     showStartMenu: () => showMenu('start-menu'),
     showMapSelectionMenu: () => showMenu('map-selection-menu'),
+    showAvatarMenu: () => showMenu('avatar-menu'),
     showCustomCursor,
     hideCustomCursor,
 };

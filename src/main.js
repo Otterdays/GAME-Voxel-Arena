@@ -2,10 +2,11 @@
 import { initInput, getInputState, clearEscapeInput, setCursorActive, refreshKeybinds } from './input.js';
 import { createArena } from './arena.js';
 import { Player } from './player.js';
-import { Gun } from './gun.js';
+import { Glock } from './glock.js';
 import { Bullet } from './bullet.js';
 import { getSetting } from './settings.js';
 import { initUI, UIManager, updateCustomCursorPosition } from './ui.js';
+import { initAvatarEditor } from './avatar.js';
 
 class Game {
     constructor() {
@@ -149,9 +150,10 @@ class Game {
         setCursorActive(false);
 
         if (!this.player) {
-            this.arenaMeshes = createArena(this.scene, mapId);
-            this.player = new Player(this.camera, this.scene);
-            this.gun = new Gun(this.camera, this);
+            const arena = createArena(this.scene, mapId);
+            this.arenaMeshes = arena.meshes;
+            this.player = new Player(this.camera, this.scene, arena.structures);
+            this.gun = new Glock(this.camera, this);
         }
     }
 
