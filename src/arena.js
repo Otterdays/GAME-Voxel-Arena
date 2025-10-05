@@ -26,22 +26,26 @@ function createMeshesFromStructures(scene, structures) {
 }
 
 export function createArena(scene, mapId) {
-    let structures;
+    let arenaData;
     switch (mapId) {
         case 'arena1':
-            structures = createArena1();
+            arenaData = createArena1();
             break;
         case 'arena2':
-            structures = createArena2();
+            arenaData = createArena2();
             break;
         default:
             console.warn(`Unknown mapId: ${mapId}. Loading default arena1.`);
-            structures = createArena1();
+            arenaData = createArena1();
             break;
     }
 
     return {
-        structures: structures,
-        meshes: createMeshesFromStructures(scene, structures)
+        structures: arenaData.structures,
+        spawnPoint: arenaData.spawnPoint,
+        spawnPoints: arenaData.spawnPoints || [arenaData.spawnPoint],
+        botSpawnAreas: arenaData.botSpawnAreas || { red: [], blue: [] },
+        metadata: arenaData.metadata || {},
+        meshes: createMeshesFromStructures(scene, arenaData.structures)
     };
 }

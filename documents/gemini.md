@@ -1,4 +1,6 @@
-# ArenaFPS
+**IMPORTANT NOTE FOR GEMINI:** When updating this document, or any other documentation file, never delete existing content. Only add new information or make corrections to existing content.
+
+# Voxel Arena
 
 A fast-paced, browser-based first-person shooter game.
 

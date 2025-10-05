@@ -1,12 +1,12 @@
-# ArenaFPS - Project Summary
+# Voxel Arena - Project Summary
 
 ## Project Overview
-ArenaFPS is a browser-based 3D first-person shooter game built with HTML5, CSS3, and JavaScript using the Three.js library. The game features a retro-futuristic aesthetic with green-on-black UI styling and provides a complete single-player FPS experience.
+Voxel Arena is a browser-based 3D first-person shooter game built with HTML5, CSS3, and JavaScript using the Three.js library. The game features a retro-futuristic aesthetic with green-on-black UI styling and provides a complete single-player FPS experience.
 
 ## Current Status
-**Version**: 0.1.1 (Stable Release)  
-**Last Updated**: December 2024  
-**Platform**: Web Browser (Cross-platform)  
+**Version**: 0.1.2 (Stable Release)
+**Last Updated**: December 2024
+**Platform**: Web Browser (Cross-platform)
 **Status**: All critical bugs fixed, fully functional
 
 ## Core Features Implemented
@@ -45,6 +45,14 @@ ArenaFPS is a browser-based 3D first-person shooter game built with HTML5, CSS3,
 - **Custom Cursor System**: Soft pause menu avoiding pointer lock issues
 - **HUD**: Crosshair display during gameplay
 - **Settings Management**: Persistent storage using localStorage
+- **Quit Page**: A dedicated `home.html` page provides a clean exit experience.
+
+### Minimap
+- **Real-time Display**: Shows a top-down view of the arena.
+- **Player-centric View**: The minimap rotates with the player, keeping their forward direction as "up".
+- **Compass**: A North indicator helps with orientation.
+- **Bot Display**: Bots are displayed on the minimap with their respective team colors (red/blue).
+- **Transparent Background**: The minimap has a clear background to avoid obscuring the game view.
 
 ### Audio System
 - **Background Music**: Menu music with fade-in effects
@@ -62,8 +70,9 @@ ArenaFPS is a browser-based 3D first-person shooter game built with HTML5, CSS3,
 
 ### File Structure
 ```
-ArenaFPS/
+Voxel Arena/
 ├── index.html              # Main HTML entry point
+├── home.html               # Quit page
 ├── style.css               # Complete UI styling
 ├── main.png                # Game icon
 ├── audio/
@@ -78,7 +87,8 @@ ArenaFPS/
 │   ├── bullet.js          # Projectile physics
 │   ├── ui.js              # User interface management
 │   ├── input.js           # Input handling and keybinds
-│   └── settings.js        # Settings persistence
+│   ├── settings.js        # Settings persistence
+│   └── minimap.js         # Minimap rendering
 └── documents/
     ├── ARCHITECTURE.md    # Technical architecture documentation
     ├── SBOM.md           # Software bill of materials
@@ -94,6 +104,7 @@ The project follows a modular architecture with clear separation of concerns:
 - **UI** (`ui.js`): Interface management and user interaction
 - **Input** (`input.js`): Input processing and keybind management
 - **Settings** (`settings.js`): Configuration persistence
+- **Minimap** (`minimap.js`): Renders the minimap display.
 
 ## Dependencies
 - **Three.js r128**: 3D graphics library (CDN)
@@ -123,3 +134,4 @@ The project follows a modular architecture with clear separation of concerns:
 - Smooth 60fps gameplay with physics simulation
 - Robust error handling and import management
 - Browser cache troubleshooting documentation
+- Feature-rich minimap with compass and bot indicators.

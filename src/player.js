@@ -12,15 +12,29 @@ const JUMP_FORCE = 8.0; // Upward velocity when jumping
 const GRAVITY = 20.0; // Downward acceleration
 
 export class Player {
-    constructor(camera, scene, structures) {
+    constructor(camera, scene, structures, spawnPoint) {
         this.camera = camera;
         this.scene = scene;
         this.structures = structures;
 
         // Player model
-        this.mesh = createCharacterModel();
-        this.mesh.position.set(0, 0, 0);
+        this.mesh = createCharacterModel(0x00ff00); // Green for player
+        this.mesh.position.set(spawnPoint.x, spawnPoint.y, spawnPoint.z);
         this.scene.add(this.mesh);
+        
+        // Team assignment
+        this.team = 'red'; // Default team
+
+        // Set the player model to a layer that the main camera doesn't render
+        const LOCAL_PLAYER_LAYER = 1;
+        this.mesh.traverse((child) => {
+            if (child.isMesh) {
+                child.layers.set(LOCAL_PLAYER_LAYER);
+            }
+        });
+        // The camera, by default, renders layer 0. Everything else in the scene
+        // is on layer 0 by default, so this effectively makes the player model
+        // invisible to the main camera without affecting anything else.
 
         // Camera setup
         this.camera.position.set(0, PLAYER_HEIGHT * 0.9, 0);
@@ -36,6 +50,10 @@ export class Player {
 
         this.wobbleTimer = 0;
         this.isMoving = false;
+        
+        // Player health
+        this.health = 1.0;
+        this.maxHealth = 1.0;
     }
 
     update(deltaTime) {
@@ -85,9 +103,18 @@ export class Player {
         this.velocityY -= GRAVITY * deltaTime;
         this.mesh.position.y += this.velocityY * deltaTime;
 
-        // Ground check and collision response
-        if (checkCollision(this, this.structures)) {
-            this.mesh.position.y = oldPosition.y;
+        // Ground check and collision response - temporarily disabled to test
+        // if (checkCollision(this, this.structures)) {
+        //     this.mesh.position.y = oldPosition.y;
+        //     this.velocityY = 0;
+        //     this.isOnGround = true;
+        // } else {
+        //     this.isOnGround = false;
+        // }
+        
+        // Simple ground check - if below y=1.0, set to y=1.0 and stop falling
+        if (this.mesh.position.y < 1.0) {
+            this.mesh.position.y = 1.0;
             this.velocityY = 0;
             this.isOnGround = true;
         } else {

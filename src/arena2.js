@@ -26,5 +26,51 @@ export function createArena2() {
     structures.push(new Structure({ x: 20, y: 2.5, z: -30 }, { x: 10, y: 1, z: 20 }, 'box'));
     structures.push(new Structure({ x: 40, y: 2.5, z: -30 }, { x: 10, y: 1, z: 20 }, 'box'));
 
-    return structures;
+    // Multiple spawn points for random spawning
+    const spawnPoints = [
+        { x: -40, y: 1, z: -40 }, // Top-left corner
+        { x: 40, y: 1, z: -40 },  // Top-right corner
+        { x: -40, y: 1, z: 40 },  // Bottom-left corner
+        { x: 40, y: 1, z: 40 },   // Bottom-right corner
+        { x: 0, y: 1, z: -40 },   // Top center
+        { x: 0, y: 1, z: 40 },    // Bottom center
+        { x: -40, y: 1, z: 0 },   // Left center
+        { x: 40, y: 1, z: 0 },    // Right center
+        { x: -20, y: 1, z: -20 }, // Additional corners
+        { x: 20, y: 1, z: -20 },
+        { x: -20, y: 1, z: 20 },
+        { x: 20, y: 1, z: 20 }
+    ];
+
+    // Bot spawn areas (team-specific)
+    const botSpawnAreas = {
+        red: [
+            { x: -45, y: 1, z: -45 }, // Red team spawn area
+            { x: -35, y: 1, z: -45 },
+            { x: -45, y: 1, z: -35 },
+            { x: -35, y: 1, z: -35 }
+        ],
+        blue: [
+            { x: 45, y: 1, z: 45 },   // Blue team spawn area
+            { x: 35, y: 1, z: 45 },
+            { x: 45, y: 1, z: 35 },
+            { x: 35, y: 1, z: 35 }
+        ]
+    };
+
+    return {
+        structures: structures,
+        spawnPoint: { x: 0, y: 1, z: 0 }, // Default spawn (fallback)
+        spawnPoints: spawnPoints,
+        botSpawnAreas: botSpawnAreas,
+        metadata: {
+            name: 'Big Arena',
+            description: 'A large arena with complex obstacles and elevated platforms',
+            size: { x: 120, y: 15, z: 120 },
+            maxPlayers: 12,
+            maxBots: 16,
+            difficulty: 'hard',
+            theme: 'industrial'
+        }
+    };
 }

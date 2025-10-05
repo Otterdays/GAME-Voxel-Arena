@@ -3,18 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ArenaFPS</title>
+    <title>Voxel Arena</title>
     <link rel="icon" type="image/png" href="main.png">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <canvas id="game-canvas"></canvas>
 
+    <!-- Minimap Container -->
+    <div id="game-minimap">
+        <canvas id="minimap-canvas" width="200" height="200"></canvas>
+    </div>
+
     <!-- UI Menus -->
     <div id="ui-container">
         <!-- Start Menu -->
         <div id="start-menu" class="menu active">
-            <h1>ArenaFPS</h1>
+            <h1>Voxel Arena</h1>
             <button id="single-player-button">Single Player</button>
             <button id="multiplayer-button">Multiplayer</button>
             <button id="settings-button">Settings</button>
@@ -32,42 +37,237 @@
         <!-- Map Selection Menu -->
         <div id="map-selection-menu" class="menu">
             <h2>Select Map</h2>
-            <div id="map-display">
-                <!-- Map details will be populated here -->
+            <div class="map-selection-container">
+                <!-- Top Row: Map Preview and Info -->
+                <div class="map-preview-row">
+                    <div class="map-preview-section">
+                        <div id="map-preview-container"></div>
+                    </div>
+                    <div class="map-info-section">
+                        <h3 id="map-name">Classic Arena</h3>
+                        <p id="map-description">A classic arena with simple obstacles and open spaces</p>
+                        <div class="map-stats">
+                            <div class="stat">
+                                <span class="stat-label">Size:</span>
+                                <span class="stat-value" id="map-size">100x100</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-label">Max Players:</span>
+                                <span class="stat-value" id="map-max-players">8</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-label">Difficulty:</span>
+                                <span class="stat-value" id="map-difficulty">Medium</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bottom Row: Settings and Controls -->
+                <div class="map-controls-row">
+                    <div class="settings-columns">
+                        <div class="setting-group">
+                            <h3>Team Selection</h3>
+                            <div class="setting-item">
+                                <label for="player-team-select">Your Team:</label>
+                                <select id="player-team-select">
+                                    <option value="red" selected>Red Team</option>
+                                    <option value="blue">Blue Team</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="setting-group">
+                            <h3>Bot Settings</h3>
+                            <div class="setting-item">
+                                <label for="bot-difficulty-select">Bot Difficulty:</label>
+                                <select id="bot-difficulty-select">
+                                    <option value="easy">Easy</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="hard">Hard</option>
+                                    <option value="expert">Expert</option>
+                                </select>
+                            </div>
+                            <div class="setting-item">
+                                <label>Red Team Bots:</label>
+                                <div class="bot-count-controls">
+                                    <button id="red-bots-minus" class="bot-count-btn">-</button>
+                                    <span id="red-bots-count" class="bot-count-display">2</span>
+                                    <button id="red-bots-plus" class="bot-count-btn">+</button>
+                                </div>
+                            </div>
+                            <div class="setting-item">
+                                <label>Blue Team Bots:</label>
+                                <div class="bot-count-controls">
+                                    <button id="blue-bots-minus" class="bot-count-btn">-</button>
+                                    <span id="blue-bots-count" class="bot-count-display">2</span>
+                                    <button id="blue-bots-plus" class="bot-count-btn">+</button>
+                                </div>
+                            </div>
+                            <div class="setting-item">
+                                <label>Total Bots: <span id="total-bots-count">4</span></label>
+                            </div>
+                        </div>
+                        <div class="setting-group">
+                            <h3>Game Settings</h3>
+                            <div class="setting-item">
+                                <label for="random-spawn-toggle">Random Spawn:</label>
+                                <div class="toggle-switch">
+                                    <button id="random-spawn-on" class="active">ON</button>
+                                    <button id="random-spawn-off">OFF</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="map-selection-column">
+                        <div class="map-selection-buttons">
+                            <h3>Choose Arena</h3>
+                            <div id="map-display">
+                                <!-- Map selection buttons will be populated here -->
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            <button id="start-map-button">Start Map</button>
+                            <button id="map-selection-back-button">Back</button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <button id="start-map-button">Start Map</button>
-            <button id="map-selection-back-button">Back</button>
         </div>
 
         <!-- Settings Menu -->
         <div id="settings-menu" class="menu">
             <h2>Settings</h2>
-            <div class="settings-section">
-                <h3>Audio</h3>
-                <label for="volume-slider">Master Volume</label>
-                <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5">
-                <label for="music-volume-slider">Music Volume</label>
-                <input type="range" id="music-volume-slider" min="0" max="1" step="0.1" value="0.5">
-            </div>
-            <div class="settings-section">
-                <h3>Video</h3>
-                <div id="video-settings-container">
-                    <!-- Video settings will be populated by JavaScript -->
+            <div class="settings-container">
+                <div class="settings-main-grid">
+                    <div class="settings-section">
+                        <h3>Audio</h3>
+                    <div class="setting-item">
+                        <label for="master-volume-slider">Master Volume</label>
+                        <input type="range" id="master-volume-slider" min="0" max="1" step="0.1" value="1.0">
+                        <span id="master-volume-value">100%</span>
+                    </div>
+                    <div class="setting-item">
+                        <label for="volume-slider">SFX Volume</label>
+                        <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.5">
+                        <span id="volume-value">50%</span>
+                    </div>
+                    <div class="setting-item">
+                        <label for="music-volume-slider">Music Volume</label>
+                        <input type="range" id="music-volume-slider" min="0" max="1" step="0.1" value="0.5">
+                        <span id="music-volume-value">50%</span>
+                    </div>
+                    <div class="setting-item">
+                        <label for="weapon-volume-slider">Weapon Volume</label>
+                        <input type="range" id="weapon-volume-slider" min="0" max="1" step="0.1" value="0.7">
+                        <span id="weapon-volume-value">70%</span>
+                    </div>
+                </div>
+                
+                    <div class="settings-section">
+                        <h3>Video</h3>
+                        <div id="video-settings-container">
+                            <!-- Video settings will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3>Gameplay</h3>
+                        <div id="gameplay-settings-container">
+                            <!-- Gameplay settings will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Accessibility</h3>
+                    <div id="accessibility-settings-container">
+                        <!-- Accessibility settings will be populated by JavaScript -->
+                    </div>
                 </div>
             </div>
-            <div class="settings-section">
+            
+            <!-- Keybinds Section - Full Width -->
+            <div class="settings-section keybinds-section">
                 <h3>Keybinds</h3>
                 <p class="instruction-text">Click a button to rebind</p>
-                <div id="keybinds-container">
-                    <!-- Keybinds will be populated by JavaScript -->
+                
+                <div class="keybinds-grid">
+                    <div class="keybind-group">
+                        <h4>Movement</h4>
+                        <div class="keybind-row">
+                            <div class="keybind-item">
+                                <span class="keybind-label">Forward</span>
+                                <button class="keybind-button" data-action="forward">W</button>
+                            </div>
+                            <div class="keybind-item">
+                                <span class="keybind-label">Backward</span>
+                                <button class="keybind-button" data-action="backward">S</button>
+                            </div>
+                            <div class="keybind-item">
+                                <span class="keybind-label">Left</span>
+                                <button class="keybind-button" data-action="left">A</button>
+                            </div>
+                            <div class="keybind-item">
+                                <span class="keybind-label">Right</span>
+                                <button class="keybind-button" data-action="right">D</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="keybind-group">
+                        <h4>Actions</h4>
+                        <div class="keybind-row">
+                            <div class="keybind-item">
+                                <span class="keybind-label">Jump</span>
+                                <button class="keybind-button" data-action="jump">Space</button>
+                            </div>
+                            <div class="keybind-item">
+                                <span class="keybind-label">Fire</span>
+                                <button class="keybind-button" data-action="fire">Mouse0</button>
+                            </div>
+                            <div class="keybind-item">
+                                <span class="keybind-label">Reload</span>
+                                <button class="keybind-button" data-action="reload">R</button>
+                            </div>
+                            <div class="keybind-item">
+                                <span class="keybind-label">Sprint</span>
+                                <button class="keybind-button" data-action="sprint">Shift</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="keybind-group">
+                        <h4>UI</h4>
+                        <div class="keybind-row">
+                            <div class="keybind-item">
+                                <span class="keybind-label">Crouch</span>
+                                <button class="keybind-button" data-action="crouch">Ctrl</button>
+                            </div>
+                            <div class="keybind-item">
+                                <span class="keybind-label">Interact</span>
+                                <button class="keybind-button" data-action="interact">E</button>
+                            </div>
+                            <div class="keybind-item">
+                                <span class="keybind-label">Map</span>
+                                <button class="keybind-button" data-action="map">M</button>
+                            </div>
+                            <div class="keybind-item">
+                                <span class="keybind-label">Menu</span>
+                                <button class="keybind-button" data-action="menu">Escape</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div id="settings-message" class="message"></div>
             <div class="settings-actions">
-                <button id="apply-settings-button">Apply</button>
-                <button id="cancel-settings-button">Cancel</button>
+                <div class="main-actions">
+                    <button id="apply-settings-button">Apply</button>
+                    <button id="cancel-settings-button">Cancel</button>
+                    <button id="reset-settings-button">Reset to Defaults</button>
+                </div>
+                <button id="back-button">Back</button>
             </div>
-            <button id="back-button">Back</button>
         </div>
 
         <!-- Pause Menu -->

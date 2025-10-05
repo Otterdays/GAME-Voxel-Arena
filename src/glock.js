@@ -1,12 +1,14 @@
-import { getInputState, clearFireInput } from './input.js';
 import { getSetting } from './settings.js';
 
 export class Glock {
-    constructor(camera, game) {
-        this.camera = camera;
+    constructor(parent, game) {
+        this.parent = parent; // Can be camera (for player) or mesh (for bot)
         this.game = game;
         this.lastFireTime = 0;
         this.fireRate = 0.15; // seconds
+        this.ammo = 30; // Default ammo
+        this.maxAmmo = 30;
+        this.isReloading = false;
 
         // Gun Model
         const gunGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.5);
@@ -19,7 +21,7 @@ export class Glock {
         this.bulletSpawnPoint.position.set(0, 0, -0.25); // Tip of the barrel
         this.mesh.add(this.bulletSpawnPoint);
 
-        this.camera.add(this.mesh);
+        this.parent.add(this.mesh); // Attach gun to parent (camera or bot mesh)
 
         // Audio setup
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -27,20 +29,23 @@ export class Glock {
         this.gainNode.connect(this.audioContext.destination);
     }
 
-    update(time) {
-        const input = getInputState();
-        if (input.fire && time - this.lastFireTime > this.fireRate) {
-            this.fire();
-            this.lastFireTime = time;
-            clearFireInput();
+    update(deltaTime) {
+        // Update weapon state (e.g., reloading animation)
+        if (this.isReloading) {
+            // Add reloading animation/logic here if needed
         }
-        this.gainNode.gain.value = getSetting('audio', 'volume');
+        this.gainNode.gain.value = getSetting('audio', 'weaponVolume');
     }
 
     fire() {
+        if (this.ammo <= 0 || this.isReloading) return;
+
+        this.ammo--;
+        this.lastFireTime = Date.now();
+
         // Create and register a bullet
         const bulletPosition = this.bulletSpawnPoint.getWorldPosition(new THREE.Vector3());
-        const bulletDirection = this.camera.getWorldDirection(new THREE.Vector3());
+        const bulletDirection = this.parent.getWorldDirection(new THREE.Vector3()); // Get direction from parent
         this.game.addBullet(bulletPosition, bulletDirection);
 
         // Snappier procedural "bang" sound
@@ -70,5 +75,18 @@ export class Glock {
         oscillator.stop(time + 0.05);
         noise.start(time);
         noise.stop(time + 0.05);
+    }
+
+    reload() {
+        if (this.isReloading) return;
+        this.isReloading = true;
+        setTimeout(() => {
+            this.ammo = this.maxAmmo;
+            this.isReloading = false;
+        }, this.reloadTime);
+    }
+
+    needsReload() {
+        return this.ammo === 0 && !this.isReloading;
     }
 }

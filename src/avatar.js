@@ -12,14 +12,24 @@ function init() {
     scene.background = new THREE.Color(0x222222);
 
     // Camera
-    camera = new THREE.PerspectiveCamera(75, display.clientWidth / display.clientHeight, 0.1, 1000);
+    const maxWidth = 200;
+    const maxHeight = 250;
+    const width = Math.min(display.clientWidth, maxWidth);
+    const height = Math.min(display.clientHeight, maxHeight);
+    
+    camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
     camera.position.y = 1.5;
     camera.position.z = 3;
 
     // Renderer
     renderer = new THREE.WebGLRenderer();
-    renderer.setSize(display.clientWidth, display.clientHeight);
+    renderer.setSize(width, height);
     display.appendChild(renderer.domElement);
+    
+    // Debug: Log sizing occasionally
+    if (Math.random() < 0.01) {
+        console.log(`Avatar display: container=${display.clientWidth}x${display.clientHeight}, renderer=${width}x${height}`);
+    }
 
     // Lights
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);

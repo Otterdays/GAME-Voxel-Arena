@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project is a 3D Arena FPS game built with HTML, CSS, and JavaScript. Three.js is used for 3D rendering, loaded globally via a `<script>` tag in `index.html`. The application runs entirely in the browser.
+Voxel Arena is a 3D FPS game built with HTML, CSS, and JavaScript. Three.js is used for 3D rendering, loaded globally via a `<script>` tag in `index.html`. The application runs entirely in the browser.
 
 ## Components
 
@@ -12,10 +12,11 @@ This project is a 3D Arena FPS game built with HTML, CSS, and JavaScript. Three.
 -   **`src/arena.js`**: Acts as a dispatcher for arena creation. It imports specific arena definitions and, based on a `mapId`, calls the appropriate arena creation function.
 -   **`src/arena1.js`**: Defines the first arena, including its geometry, materials, and obstacles (relying on the global `THREE` object).
 -   **`src/arena2.js`**: Defines the second, larger, and more complex arena with varied obstacles and colors (relying on the global `THREE` object).
--   **`src/player.js`**: Handles player creation, movement, and first-person camera controls. It uses the character model from `src/character.js`.
+-   **`src/player.js`**: Handles player creation, movement, and first-person camera controls. It uses the character model from `src/character.js`. To prevent the camera from clipping into the player's own model, the model is assigned to a separate rendering layer, making it invisible to the main camera.
 -   **`src/glock.js`**: Manages the player's weapon, including its model, iron sights, firing mechanism, and sound effects. It creates bullets when fired (relying on the global `THREE` object).
 -   **`src/bullet.js`**: Defines the `Bullet` class, including its appearance (dark orange sphere), movement logic, and lifetime (relying on the global `THREE` object).
 -   **`src/ui.js`**: Controls the visibility and interaction of all UI components (start menu, settings, pause menu, HUD), including dynamic population of map selection buttons and custom toggle switches for settings.
+-   **`src/minimap.js`**: **Completely rebuilt minimap system (v0.21)** - Renders a top-down minimap on the HUD with dynamic element creation. Displays player position (green dot), direction indicator, structures (gray rectangles), and bots (red/blue dots by team). Features 4x zoom level, proper coordinate system, and self-contained DOM creation with no HTML dependencies.
 -   **`src/input.js`**: Captures and processes all keyboard and mouse input, managed by a customizable keybinding system.
 -   **`src/settings.js`**: Manages persistent game settings like audio volume and keybindings, potentially using browser `localStorage`.
 -   **`src/structures.js`**: Defines the `Structure` class, a data representation for all world objects that can be collided with.
@@ -44,7 +45,50 @@ To prepare for a future map editor and to implement proper collision, a new stru
 *   **`src/structures.js`:** A `Structure` class defines the data representation for all world objects that can be collided with. This separates the object's data (position, size, type) from its visual representation.
 *   **`src/physics.js`:** A `checkCollision` function uses Axis-Aligned Bounding Box (AABB) intersection tests to detect collisions between the player and structures.
 *   **Arena Generation:** The arena files (`src/arena1.js`, `src/arena2.js`) now define an array of `Structure` objects. The `src/arena.js` file then uses this array to generate the visible Three.js meshes, keeping the data and rendering separate.
-## Player Collision:** The `src/player.js` file now uses the `checkCollision` function to detect and prevent movement into structures.
+*   **Player Collision:** The `src/player.js` file now uses the `checkCollision` function to detect and prevent movement into structures.
+
+## Enhanced Map System and Spawn Mechanics
+
+### Arena Data Structure
+Each arena now includes comprehensive metadata and spawn information:
+
+```javascript
+{
+    structures: [...],           // Collision structures
+    spawnPoint: {...},          // Default spawn point
+    spawnPoints: [...],         // Multiple spawn points for random spawning
+    botSpawnAreas: {            // Team-specific spawn areas
+        red: [...],
+        blue: [...]
+    },
+    metadata: {                 // Map information
+        name: 'Arena Name',
+        description: 'Description',
+        size: { x, y, z },
+        maxPlayers: 8,
+        maxBots: 12,
+        difficulty: 'medium',
+        theme: 'classic'
+    }
+}
+```
+
+### Random Spawn System
+- **Player Spawning**: Random selection from available spawn points
+- **Bot Spawning**: Team-specific spawn areas with random selection
+- **Fallback**: Uses default spawn point if random spawning is disabled
+
+### Map Preview System (`src/mapPreview.js`)
+- **3D Preview**: Real-time 3D visualization of map layout
+- **Spawn Indicators**: Visual markers for player and bot spawn points
+- **Team Colors**: Red/blue indicators for team spawn areas
+- **Interactive**: Rotating camera view with lighting and shadows
+
+### Map Selection UI
+- **Preview Display**: Shows 3D map preview with spawn locations
+- **Map Information**: Displays name, description, size, and difficulty
+- **Bot Settings**: Configure bot count, difficulty, and team balance
+- **Game Settings**: Toggle random spawn and other options
 
 ## Avatar Editor
 
@@ -60,6 +104,35 @@ A new avatar editor feature has been added to allow players to view their charac
 *   **Volume Control:** A "Music Volume" slider in the audio settings allows players to adjust the music's volume.
 *   **Autoplay Policy:** Due to browser autoplay policies, music playback is initiated (AudioContext resumed) on the first user gesture on the page.
 
+## AI Bot System Architecture
+
+The AI bot system provides fully functional computer-controlled opponents with physics integration, intelligent behavior, and combat capabilities. The system consists of 9 modular components working together to create realistic bot behaviors.
+
+**Core Components:**
+*   **Bot.js**: Main bot class integrating all AI systems with physics
+*   **BotBrain.js**: Central AI decision-making with state machines
+*   **BotSenses.js**: Perception system for enemy detection and environmental awareness
+*   **BotMemory.js**: Learning system with experience storage and pattern recognition
+*   **BotPersonality.js**: Behavioral traits affecting decision-making and emotional responses
+*   **BotCombat.js**: Tactical combat system with weapon handling and target prioritization
+*   **BotMovement.js**: Advanced pathfinding with physics-based movement
+*   **BotCommunication.js**: Team coordination and information sharing
+*   **BotManager.js**: Game integration and bot lifecycle management
+
+**Key Features:**
+*   **Physics Integration**: Bots use identical physics system as player (gravity, collision, movement)
+*   **Two-State AI**: Simple but effective patrol/combat behavior system
+*   **Team Combat**: Red vs Blue team battles with proper team awareness
+*   **Enemy Detection**: Vision-based targeting with 25-unit detection range
+*   **Weapon Systems**: Realistic weapon firing with fire rate limiting
+*   **Patrol Behavior**: Circular patrol patterns around spawn areas
+
+**Technical Implementation:**
+*   **Physics Constants**: RADIUS: 0.5, HEIGHT: 1.8, SPEED: 3.0, GRAVITY: 20.0
+*   **AI Parameters**: Vision range: 25 units, Combat range: 15 units, Fire rate: 500ms
+*   **Performance**: Optimized update intervals and efficient memory management
+*   **Integration**: Seamless integration with existing game systems and physics
+
 ## Custom GUI and Mouse System (Soft Pause Menu)
 
 To address issues with the browser's Pointer Lock API and provide a smoother user experience, a "soft pause" menu system has been implemented. This system avoids repeatedly requesting and exiting pointer lock, which previously caused `SecurityError` and inconsistent mouse behavior.
@@ -74,3 +147,218 @@ To address issues with the browser's Pointer Lock API and provide a smoother use
 *   **`src/ui.js`:** Manages the visibility (`showCustomCursor()`, `hideCustomCursor()`) and visual position (`updateCustomCursorPosition()`) of the custom cursor. It also controls the `pointer-events` on the main UI container to allow/disallow clicks based on cursor activity. The `populateVideoSettings()` function now dynamically creates the custom toggle buttons for settings like "Walk Wobble", handling their state and interaction with the `settings.js` module.
 *   **`src/input.js`:** Contains logic to switch between camera control (when playing) and custom cursor movement (when paused). The `mousemove` listener is attached to `document.body` to ensure robust tracking of the system mouse across the entire window. When the custom cursor is active, `handleMouseMove` updates the custom cursor's absolute position (`e.clientX`, `e.clientY`), ensuring it always tracks and snaps to the system mouse. `handleMouseDown` uses `document.elementFromPoint()` to identify and trigger click events on UI elements beneath the custom cursor.
 *   **`src/main.js`:** Orchestrates the game state transitions. `pauseGame()` and `resumeGame()` now primarily manage the game's `gameState` and call `setCursorActive(true/false)` (from `input.js`) and `UIManager.showPauseMenu()/showHUD()` (from `ui.js`). Pointer lock is automatically requested by `startGame()` and when clicking the `Resume` button (as these are direct user gestures). The `onPointerlockChange` listener is crucial: if the pointer lock is lost while the game is in the 'playing' state (e.g., user presses 'Escape' or browser-initiated release), it automatically calls `pauseGame()`, ensuring the mouse cannot escape the game without the pause menu appearing. If resuming via the 'Escape' key, a manual click on the canvas is required to re-acquire pointer lock.
+
+## Canvas Viewport and UI Scaling Fixes (December 2024)
+
+### Canvas Viewport Issues
+**Problem:** Canvas wasn't filling the viewport properly on initial load, causing white background cutoff and requiring F12/devtools to fix layout issues.
+
+**Root Causes:**
+*   Canvas sizing not synchronized between CSS and Three.js renderer
+*   Missing resize triggers on DOM load events
+*   Complex UI scaling system causing layout conflicts
+
+**Solutions Implemented:**
+
+### Canvas Sizing Enforcement (`src/main.js`)
+*   **Force Canvas Sizing:** Added explicit canvas sizing in `init()` and `onWindowResize()`:
+    ```javascript
+    this.canvas.style.width = '100vw';
+    this.canvas.style.height = '100vh';
+    this.canvas.width = window.innerWidth;
+    this.canvas.height = window.innerHeight;
+    ```
+*   **Multiple Resize Triggers:** Added event listeners for `DOMContentLoaded`, `window.load`, and `setTimeout` delay to ensure proper sizing without requiring devtools.
+
+### CSS Canvas Fixes (`style.css`)
+*   **Canvas Positioning:** Changed canvas to `position: fixed !important` with `z-index: -1` to ensure it fills viewport
+*   **Viewport Units:** Used `100vw` and `100vh` with `!important` to override any conflicting styles
+*   **HTML/Body Reset:** Added `margin: 0; padding: 0; overflow: hidden` to eliminate browser defaults
+
+### UI Scaling System Refinement
+*   **Element-Level Scaling:** Moved scaling from container-level to individual UI elements to prevent layout disruption
+*   **Simplified Media Queries:** Reduced aggressive scaling breakpoints to prevent conflicts
+*   **Map Preview Scaling:** Fixed oversized map preview by implementing responsive sizing with ResizeObserver
+
+### Map Preview System (`src/mapPreview.js`)
+*   **Responsive Sizing:** Replaced fixed 400x300 renderer size with dynamic container-based sizing
+*   **ResizeObserver:** Added automatic resize handling when container dimensions change
+*   **Proper Cleanup:** Added ResizeObserver disconnection in `destroy()` method
+
+**Result:** Canvas now fills viewport immediately on load, no white background cutoff, no F12 dependency, and properly scaled UI elements across all screen sizes.
+
+## UI Scaling System Simplification (December 2024)
+
+### Scaling Issues Identified
+**Problem:** Complex UI scaling system was causing menus to be oversized and map preview to be massive, requiring browser zoom out to view properly.
+
+**Root Causes:**
+*   Multiple scaling mechanisms conflicting (CSS transforms, CSS variables, JavaScript scaling)
+*   Oversized container dimensions (settings container 1400px, map preview 400x300px)
+*   Complex adaptive scaling logic causing unpredictable behavior
+*   Transform scaling on menu elements causing layout issues
+
+**Solutions Implemented:**
+
+### CSS Simplification (`style.css`)
+*   **Removed Complex Variables**: Eliminated `--scaled-*` CSS variables and media query scaling
+*   **Fixed Container Sizes**: 
+    - Settings container: `max-width: 1000px` (was 1400px)
+    - Map preview: `300x200px` (was 400x300px)
+    - Map selection: `max-width: 800px` (was 1000px)
+*   **Removed Transform Scaling**: Eliminated `transform: scale()` from menu elements
+*   **Added Responsive Widths**: Added `width: 90%` to containers for better responsiveness
+
+### JavaScript Simplification (`src/main.js`)
+*   **Simplified updateUIScaling()**: Removed adaptive scaling and performance profile logic
+*   **Removed Performance Monitoring**: Eliminated FPS history and uiScaleTarget calculations
+*   **Direct Setting Application**: Now directly applies `uiScale` setting without complex calculations
+
+### Menu System Fixes
+*   **Fixed Menu Dimensions**: Added `max-width: 600px` and `width: 90%` to `.menu` class
+*   **Consistent Padding**: Replaced scaled padding with fixed `20px` padding
+*   **Proper Border Radius**: Fixed `10px` border radius instead of scaled values
+
+**Result:** UI elements now display at proper sizes without requiring browser zoom adjustments, with consistent scaling across different screen sizes.
+
+## UI Sizing Standards and Guidelines (December 2024)
+
+### Established Standards
+
+#### **Menu Container Standards**
+- **Max-width**: 900px (reasonable maximum, not overwhelming)
+- **Width**: 90% (responsive but contained)
+- **Padding**: 20px (consistent spacing)
+- **Purpose**: Provides consistent sizing across all menu types
+
+#### **Map Selection Container Standards**
+- **Max-width**: 800px (fits within menu container)
+- **Width**: 100% (full width of parent)
+- **Min-height**: 400px (reasonable height, not excessive)
+- **Gap**: 20px (moderate spacing between sections)
+- **Margin**: 20px 0 (consistent vertical spacing)
+
+#### **Settings Section Standards**
+- **Min-width**: 400px (adequate space for controls)
+- **Max-width**: 600px (prevents excessive width)
+- **Padding**: 20px (comfortable internal spacing)
+- **Gap**: 25px (good spacing between setting groups)
+
+### Known UI Issues and Fixes
+
+#### **1. Preview Canvas Positioning**
+**Problem**: Global canvas CSS rules affect preview canvases, causing them to render outside containers.
+**Solution**: Use specific CSS selectors with `position: absolute` within containers.
+**Implementation**: Override global canvas rules with `!important` declarations for preview elements.
+
+#### **2. Container Overflow Prevention**
+**Problem**: Settings boxes overflow parent containers.
+**Solution**: Use `max-width: 100%`, `box-sizing: border-box`, and `overflow: hidden`.
+**Implementation**: Ensure all containers respect parent boundaries.
+
+#### **3. Menu Sizing Guidelines**
+**Standards**:
+- Menu max-width should not exceed 900px
+- Use 90% width for responsiveness
+- Maintain consistent 20px padding
+- Avoid excessive min-height values (>500px)
+
+#### **4. Button Styling Consistency**
+**Standards**:
+- Use gradient backgrounds for visual appeal
+- Include hover animations (translateY, shimmer effects)
+- Consistent padding and font sizing
+- Text shadows for glow effects
+
+#### **5. Setting Group Layout**
+**Standards**:
+- Use flexbox with proper gap spacing
+- Include `min-width: 0` and `flex-wrap: nowrap` for overflow prevention
+- Consistent padding (20px) and margins (15px)
+
+### Container Hierarchy
+1. **Menu Container**: 900px max-width, 90% width
+2. **Map Selection Container**: 800px max-width, 100% width
+3. **Settings Section**: 400-600px width range
+4. **Setting Groups**: 100% width of parent
+
+## Keybinds Layout System (December 2024)
+
+### Design Philosophy
+- **Horizontal Efficiency**: 3-column layout maximizes space usage
+- **Compact Design**: 60% reduction in vertical space compared to vertical stacking
+- **Logical Grouping**: Movement, Actions, UI categories for intuitive organization
+- **Scalable Structure**: Easy to add more keybinds in future
+
+### Layout Architecture
+
+#### **Main Grid Structure**
+```css
+.keybinds-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;  /* Movement | Actions | UI */
+    gap: 8px;
+}
+```
+
+#### **Sub-Grid Within Groups**
+```css
+.keybind-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);  /* 2x2 layout per group */
+    gap: 3px;
+}
+```
+
+#### **Button Optimization**
+- **Dynamic Width**: `width: 100%` uses full grid cell space
+- **Compact Height**: 14px for space efficiency
+- **Text Accommodation**: Min-width 50px handles longest text ("escape")
+- **Vertical Centering**: Line-height 4px for perfect text positioning
+
+### Technical Implementation
+
+#### **Grid System Benefits**
+- **Space Efficiency**: Horizontal layout vs vertical stacking
+- **Responsive**: Maintains structure across screen sizes
+- **Flexible**: Easy to modify column counts or add groups
+
+#### **Button Sizing Strategy**
+- **No Max-Width**: Prevents text overflow issues
+- **Full Width**: Utilizes available space in grid cells
+- **Consistent Height**: Uniform appearance across all buttons
+- **Proper Padding**: 1px 8px for adequate text space
+
+#### **Text Overflow Prevention**
+- **Problem Solved**: "Space", "mouse0", "shift", "escape" now fit properly
+- **Dynamic Sizing**: Buttons expand to accommodate text length
+- **Centered Alignment**: Both horizontal and vertical text centering
+
+### Layout Comparison
+
+#### **Before (Vertical Stack)**
+- Height: ~200px+
+- Layout: 3 stacked rows
+- Space Usage: Inefficient vertical stacking
+
+#### **After (Horizontal Grid)**
+- Height: ~80px
+- Layout: 3 side-by-side columns
+- Space Usage: Efficient horizontal distribution
+
+### Integration with Settings Menu
+- **Back Button**: Positioned to the right with proper spacing
+- **Action Buttons**: Apply/Cancel/Reset centered, Back separated
+- **Overall Flow**: Keybinds no longer dominate the settings interface
+
+### CSS Best Practices
+- Use `box-sizing: border-box` for all containers
+- Include `overflow: hidden` for containers with fixed content
+- Use `!important` sparingly, only for overriding global rules
+- Maintain consistent spacing using CSS custom properties
+
+### Responsive Design Principles
+- Use percentage widths for flexibility
+- Set reasonable maximum widths to prevent oversizing
+- Use flexbox for adaptive layouts
+- Maintain consistent gaps and padding

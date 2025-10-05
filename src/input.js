@@ -91,6 +91,8 @@ function handleMouseMove(e) {
 
         if (_updateCustomCursorPosition) {
             _updateCustomCursorPosition(cursorX, cursorY);
+        } else {
+            console.error('handleMouseMove: _updateCustomCursorPosition is null');
         }
     } else {
         state.look.dx += e.movementX;
@@ -126,6 +128,7 @@ export function clearEscapeInput() {
 }
 
 export function setCursorActive(active) {
+    console.log(`setCursorActive: ${active}, _updateCustomCursorPosition exists: ${!!_updateCustomCursorPosition}`);
     state.cursorActive = active;
     if (active) {
         // Initialize cursor position to center of screen when activated
@@ -133,6 +136,19 @@ export function setCursorActive(active) {
         cursorY = window.innerHeight / 2;
         if (_updateCustomCursorPosition) {
             _updateCustomCursorPosition(cursorX, cursorY);
+        }
+        // Show the custom cursor
+        if (window.showCustomCursor) {
+            window.showCustomCursor();
+        } else {
+            console.error('setCursorActive: window.showCustomCursor is not available');
+        }
+    } else {
+        // Hide the custom cursor
+        if (window.hideCustomCursor) {
+            window.hideCustomCursor();
+        } else {
+            console.error('setCursorActive: window.hideCustomCursor is not available');
         }
     }
 }

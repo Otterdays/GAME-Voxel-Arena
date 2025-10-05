@@ -1,4 +1,4 @@
-# ArenaFPS - Requirements Documentation
+# Voxel Arena - Requirements Documentation
 
 ## System Requirements
 
@@ -9,6 +9,7 @@
 - **Graphics**: WebGL 2.0 compatible GPU
 - **Storage**: 50MB free space
 - **Network**: Not required for single-player mode
+- **CPU**: Modern dual-core processor for AI bot calculations
 
 ### Recommended Requirements
 - **Operating System**: Windows 11 (optimized), macOS 12+, Linux (Ubuntu 20.04+)
@@ -16,6 +17,7 @@
 - **RAM**: 8GB or more
 - **Graphics**: Dedicated GPU with WebGL 2.0 support
 - **Storage**: 100MB free space
+- **CPU**: Quad-core processor for optimal AI bot performance
 - **Network**: Broadband connection for multiplayer (future feature)
 
 ## Browser Compatibility
@@ -34,6 +36,26 @@
 - **WebGL 2.0**: Required for advanced rendering features
 - **WebGL 1.0**: Fallback support with reduced features
 - **Hardware Acceleration**: Recommended for optimal performance
+
+## AI Bot System Requirements
+
+### Performance Impact
+- **CPU Usage**: ~2-5% per bot on modern hardware
+- **Memory Usage**: ~1-2MB per bot
+- **Update Frequency**: 60 FPS for physics, 10 FPS for AI decisions
+- **Scalability**: Supports up to 16 bots with optimal performance
+
+### Bot Configuration Limits
+- **Maximum Bots**: 16 concurrent bots (performance limit)
+- **Recommended Bots**: 4-8 bots for optimal gameplay experience
+- **Team Balance**: Automatic red/blue team distribution
+- **Difficulty Levels**: Easy, Medium, Hard, Expert (affects AI parameters)
+
+### AI System Requirements
+- **JavaScript Performance**: Modern JavaScript engine required
+- **Memory Management**: Efficient garbage collection for bot lifecycle
+- **Physics Calculations**: WebGL-accelerated collision detection
+- **Real-time Processing**: Low-latency AI decision making
 
 ## Development Requirements
 

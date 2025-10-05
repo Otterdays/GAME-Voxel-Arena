@@ -1,10 +1,10 @@
-# 🎮 ArenaFPS
+# 🎮 Voxel Arena
 
 > **A smooth, browser-based 3D shooter that just works.**
 
-Jump into fast-paced arena combat without downloads, installations, or complex setup. Built with vanilla JavaScript and Three.js, ArenaFPS delivers 60fps gameplay directly in your browser.
+Jump into fast-paced arena combat without downloads, installations, or complex setup. Built with vanilla JavaScript and Three.js, Voxel Arena delivers 60fps gameplay directly in your browser.
 
-![ArenaFPS Screenshot](main.png)
+![Voxel Arena Screenshot](main.png)
 
 ## ⚡ Quick Start
 
@@ -31,12 +31,28 @@ python -m http.server 8000
 - **Tactical Combat** - Jump, strafe, and shoot in arena environments  
 - **Two Unique Maps** - Classic Arena and Big Arena with different layouts
 - **Weapon System** - Realistic gun mechanics with procedural audio
+- **AI Bots** - Intelligent computer opponents with physics and combat
 
 ### Polish & Features
 - **Retro-Futuristic UI** - Clean green-on-black interface
+- **In-Game Minimap** - Top-down view of the arena for spatial awareness
 - **Customizable Settings** - Rebind any key, adjust audio levels
 - **Avatar Viewer** - Check out your character model in 3D
 - **Responsive Design** - Works on desktop and mobile browsers
+- **Clean Exit** - A dedicated home page provides a smooth exit from the game.
+
+### AI Bot Features (Fully Functional)
+- **Advanced AI System** - Multi-module BotBrain with decision trees and pathfinding
+- **Smart Opponents** - Bots patrol, hunt, flank, retreat, and engage in tactical combat
+- **Team Combat** - Red vs Blue bot teams with proper team awareness and coordination
+- **Realistic Physics** - Bots use same physics system as player (gravity, collision, movement)
+- **Competitive Speeds** - Bots move at balanced speeds (5.0 units/second for medium difficulty)
+- **Proper Positioning** - Characters appear grounded with correct collision detection
+- **Weapon Combat** - Bots fire weapons at enemies with realistic fire rates
+- **Team Selection** - Choose your team (Red/Blue) and manage bot distribution per team
+- **Custom Bot Counts** - Set different bot counts for each team (0-8 bots per team)
+- **Visual Team ID** - Player color changes based on selected team
+- **Recent Fixes** - Resolved all major bot crashes, movement issues, and positioning problems
 
 ## 🎮 Controls
 
@@ -101,17 +117,61 @@ launch.bat  # Windows
 python -m http.server 8000  # Manual
 ```
 
+### Testing the Bot System
+Once the game is running:
+
+1. **Click "Single Player"** from the main menu
+2. **Select a Map** - Choose between Classic Arena or Big Arena  
+3. **Configure Bots** - Set bot count (1-8), difficulty, and team balance
+4. **Start the Game** - You'll see:
+   - ✅ Bots spawning on the ground (not floating)
+   - ✅ Bots patrolling around their spawn areas
+   - ✅ Bots engaging enemies when detected
+   - ✅ Team-based combat between Red and Blue bots
+   - ✅ Bots firing weapons at targets
+
+**Bot Behaviors to Watch For:**
+- **Patrol Mode**: Bots walk in circular patterns around spawn points
+- **Combat Mode**: When enemies are spotted, bots move towards them and fire
+- **Team Fighting**: Red bots fight Blue bots, both teams target the player
+- **Physics**: Bots have proper gravity, collision, and ground interaction
+
 ### Architecture
-- **9 Modular Components** - Clean separation of concerns
+- **19 Modular Components** - Clean separation of concerns including AI bot system
 - **ES6 Modules** - Modern JavaScript imports
 - **Three.js r128** - Latest stable version
 - **Web Audio API** - Procedural sound generation
+- **AI Bot System** - 9-component bot system with physics and combat
 
 ### Contributing
 We welcome contributions! The codebase is designed to be:
 - **Easy to understand** - Clear module structure
 - **Easy to extend** - Add new maps, weapons, features
 - **Easy to debug** - Comprehensive logging and error handling
+
+## 🆕 Recent Updates (v0.32)
+
+### UI & Weapon System Fixes
+- **Button Interaction Fix** - Resolved double-click issues with bot count and Start Map buttons
+- **Enhanced Error Handling** - Added comprehensive null checks for UI elements
+- **Weapon System Fix** - Fixed missing import causing gun firing crashes
+- **Improved Stability** - Eliminated crashes and improved overall game reliability
+- **Better User Experience** - Smooth, predictable UI interactions
+
+### Team Selection & UI Redesign (v0.31)
+- **Team Selection** - Choose Red or Blue team before starting
+- **Custom Bot Distribution** - Set different bot counts per team (0-8 each)
+- **Wider Layout** - Redesigned UI from 800px to 1500px for better space usage
+- **Perfect Centering** - Menu now perfectly centered on screen
+- **Professional Design** - Clean, modern interface with improved spacing
+- **Visual Team ID** - Player color changes based on selected team
+- **Enhanced Controls** - Intuitive +/- buttons for bot management
+
+### Technical Improvements
+- **Horizontal Layout** - Better organization of map preview and settings
+- **Responsive Design** - Adapts to different screen sizes
+- **Team-Based Spawning** - Players spawn on their selected team's side
+- **Improved UX** - More intuitive and professional interface
 
 ## 📄 License
 

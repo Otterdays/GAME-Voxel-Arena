@@ -1,9 +1,9 @@
 # Software Bill of Materials (SBOM)
 
-This document lists all the software dependencies of the ArenaFPS project.
+This document lists all the software dependencies of the Voxel Arena project.
 
 **Generated**: December 2024  
-**Project Version**: 0.1.0  
+**Project Version**: 0.07  
 **Total Dependencies**: 1 external library
 
 ## External Dependencies
@@ -46,6 +46,62 @@ This document lists all the software dependencies of the ArenaFPS project.
 - **License**: N/A (Browser API)
 - **Usage**: First-person camera controls
 - **Security**: User-gesture required, secure
+
+## AI Bot System Components
+
+### Bot.js
+- **Purpose**: Main bot class with physics integration
+- **Lines of Code**: ~950 lines
+- **Dependencies**: Three.js, physics.js, character.js
+- **Features**: Physics system, AI behavior, weapon systems
+
+### BotBrain.js
+- **Purpose**: Core AI decision-making system
+- **Lines of Code**: ~435 lines
+- **Dependencies**: BotSenses, BotMemory, BotPersonality, BotCombat, BotMovement
+- **Features**: State machines, decision trees, learning systems
+
+### BotSenses.js
+- **Purpose**: Perception and environmental awareness
+- **Lines of Code**: ~690 lines
+- **Dependencies**: Three.js, BotBrain
+- **Features**: Vision system, hearing, threat assessment
+
+### BotMemory.js
+- **Purpose**: Learning and experience storage
+- **Lines of Code**: ~600 lines
+- **Dependencies**: BotBrain
+- **Features**: Memory consolidation, pattern recognition
+
+### BotPersonality.js
+- **Purpose**: Behavioral traits and emotional states
+- **Lines of Code**: ~400 lines
+- **Dependencies**: BotBrain
+- **Features**: Personality traits, emotional responses
+
+### BotCombat.js
+- **Purpose**: Tactical combat and weapon handling
+- **Lines of Code**: ~876 lines
+- **Dependencies**: BotBrain, Three.js
+- **Features**: Weapon systems, target prioritization, tactical positioning
+
+### BotMovement.js
+- **Purpose**: Navigation and pathfinding
+- **Lines of Code**: ~823 lines
+- **Dependencies**: BotBrain, Three.js
+- **Features**: A* pathfinding, flocking, formation movement
+
+### BotCommunication.js
+- **Purpose**: Team coordination and information sharing
+- **Lines of Code**: ~500 lines
+- **Dependencies**: BotBrain
+- **Features**: Team coordination, message passing
+
+### BotManager.js
+- **Purpose**: Game integration and bot lifecycle management
+- **Lines of Code**: ~662 lines
+- **Dependencies**: Bot.js, Three.js
+- **Features**: Bot spawning, performance optimization, lifecycle management
 
 ## Development Dependencies
 
