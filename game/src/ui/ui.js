@@ -1,9 +1,9 @@
-import { initAvatarEditor, destroyAvatarEditor } from './avatar.js';
-import { refreshKeybinds } from './input.js';
-import { getSetting, setSetting, getAllKeybinds, initTempSettings, applySettings, resetTempSettings, getTempSetting, getTempAllKeybinds, defaultSettings, performanceProfiles, applyPerformanceProfile, detectRecommendedProfile } from './settings.js';
-import { MapPreview } from './mapPreview.js';
-import { createArena1 } from './arena1.js';
-import { createArena2 } from './arena2.js';
+import { initAvatarEditor, destroyAvatarEditor } from '../player/avatar.js';
+import { refreshKeybinds } from '../core/input.js';
+import { getSetting, setSetting, getAllKeybinds, initTempSettings, applySettings, resetTempSettings, getTempSetting, getTempAllKeybinds, defaultSettings, performanceProfiles, applyPerformanceProfile, detectRecommendedProfile } from '../core/settings.js';
+import { MapPreview } from '../world/mapPreview.js';
+import { createArena1 } from '../world/arena1.js';
+import { createArena2 } from '../world/arena2.js';
 import { CustomDropdown, CustomSlider, createValueFormatter } from './customComponents.js';
 
 const ui = {
@@ -116,7 +116,7 @@ export function updateCustomCursorPosition(x, y) {
 
 function showMenu(menuId) {
     [ui.startMenu, ui.settingsMenu, ui.pauseMenu, ui.mapSelectionMenu, ui.avatarMenu].forEach(menu => {
-        if (menu.id === menuId) {
+        if (menu && menu.id === menuId) {
             menu.classList.add('active');
             if (menuId === 'settings-menu') {
                 initTempSettings(); // Initialize temp settings when opening the menu
@@ -126,7 +126,7 @@ function showMenu(menuId) {
             } else if (menuId === 'avatar-menu') {
                 initAvatarEditor();
             }
-        } else {
+        } else if (menu) {
             menu.classList.remove('active');
             // Cleanup avatar editor when leaving avatar menu
             if (menu.id === 'avatar-menu') {
@@ -138,6 +138,8 @@ function showMenu(menuId) {
     if (ui.gameMinimap) {
         ui.gameMinimap.classList.remove('active'); // Hide minimap when menu is active
     }
+    // Ensure UI container allows pointer events when menu is shown
+    ui.container.style.pointerEvents = 'auto';
     showCustomCursor();
 
     if (menuId === 'map-selection-menu') {
@@ -151,6 +153,8 @@ function showHUD() {
     if (ui.gameMinimap) {
         ui.gameMinimap.classList.add('active'); // Show minimap when HUD is active
     }
+    // Disable pointer events on UI container when showing HUD
+    ui.container.style.pointerEvents = 'none';
     hideCustomCursor();
 }
 
@@ -857,10 +861,23 @@ function applyRecommendedSettings() {
 window.showCustomCursor = showCustomCursor;
 window.hideCustomCursor = hideCustomCursor;
 
+function ensurePauseMenuInCorrectLocation() {
+    const pauseMenu = document.getElementById('pause-menu');
+    const uiContainer = document.getElementById('ui-container');
+    
+    if (pauseMenu && pauseMenu.parentElement !== uiContainer) {
+        uiContainer.appendChild(pauseMenu);
+        console.log('Fixed: Moved pause menu to ui-container');
+    }
+}
+
 export const UIManager = {
     showMenu,
     showHUD,
-    showPauseMenu: () => showMenu('pause-menu'),
+    showPauseMenu: () => {
+        ensurePauseMenuInCorrectLocation(); // Fix DOM structure before showing
+        showMenu('pause-menu');
+    },
     showStartMenu: () => showMenu('start-menu'),
     showMapSelectionMenu: () => showMenu('map-selection-menu'),
     showAvatarMenu: () => showMenu('avatar-menu'),

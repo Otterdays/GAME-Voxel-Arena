@@ -1,14 +1,14 @@
 
 import { initInput, getInputState, clearEscapeInput, clearFireInput, setCursorActive, refreshKeybinds } from './input.js';
-import { createArena } from './arena.js';
-import { Player } from './player.js';
-import { Glock } from './glock.js';
-import { Bullet } from './bullet.js';
+import { createArena } from '../world/arena.js';
+import { Player } from '../player/player.js';
+import { Glock } from '../player/glock.js';
+import { Bullet } from '../player/bullet.js';
 import { getSetting, applyPerformanceProfile } from './settings.js';
-import { initUI, UIManager, updateCustomCursorPosition } from './ui.js';
-import { initAvatarEditor } from './avatar.js';
-import { BotManager } from './bot/BotManager.js';
-import { Minimap } from './minimap.js';
+import { initUI, UIManager, updateCustomCursorPosition } from '../ui/ui.js';
+import { initAvatarEditor } from '../player/avatar.js';
+import { BotManager } from '../systems/bot/BotManager.js';
+import { Minimap } from '../ui/minimap.js';
 
 class Game {
     constructor() {
@@ -26,6 +26,7 @@ class Game {
         this.animationFrameId = null; // New property to store animation frame ID
         this.arenaMeshes = []; // New property to store arena meshes
         this.botManager = null; // Bot management system
+        this.isHandlingEscape = false; // Flag to prevent pointer lock conflicts
 
         // Performance monitoring (simplified)
         this.lastFrameTime = 0;
@@ -62,15 +63,15 @@ class Game {
         try {
             // Preload bot modules
             const botModules = [
-                './bot/Bot.js',
-                './bot/BotBrain.js',
-                './bot/BotSenses.js',
-                './bot/BotMemory.js',
-                './bot/BotPersonality.js',
-                './bot/BotCombat.js',
-                './bot/BotMovement.js',
-                './bot/BotCommunication.js',
-                './bot/BotManager.js'
+                '../systems/bot/Bot.js',
+                '../systems/bot/BotBrain.js',
+                '../systems/bot/BotSenses.js',
+                '../systems/bot/BotMemory.js',
+                '../systems/bot/BotPersonality.js',
+                '../systems/bot/BotCombat.js',
+                '../systems/bot/BotMovement.js',
+                '../systems/bot/BotCommunication.js',
+                '../systems/bot/BotManager.js'
             ];
             
             // Preload modules without executing them
@@ -85,7 +86,7 @@ class Game {
     }
 
     async loadMenuMusic() {
-        console.log('loadMenuMusic: Attempting to load audio/main.wav');
+        console.log('loadMenuMusic: Attempting to load assets/audio/main.wav');
         
         // Check if audio is already cached globally
         if (window.audioCache && window.audioCache.has('main.wav')) {
@@ -98,7 +99,7 @@ class Game {
         }
         
         try {
-            const response = await fetch('audio/main.wav');
+            const response = await fetch('../assets/audio/main.wav');
             const arrayBuffer = await response.arrayBuffer();
             this.menuMusicBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
             
@@ -310,6 +311,10 @@ class Game {
         if (this.gameState !== 'playing') return;
         this.gameState = 'paused';
         UIManager.showPauseMenu();
+        // Exit pointer lock when pausing
+        if (document.pointerLockElement === this.canvas) {
+            document.exitPointerLock();
+        }
         setCursorActive(true);
     }
 
@@ -317,9 +322,14 @@ class Game {
         if (this.gameState !== 'paused') return;
         this.gameState = 'playing';
         UIManager.showHUD();
-        this.canvas.requestPointerLock().catch(err => {
-            console.error('Pointer lock request failed on resume:', err);
-        });
+        
+        // Only request pointer lock if we don't already have it
+        if (document.pointerLockElement !== this.canvas) {
+            this.canvas.requestPointerLock().catch(err => {
+                console.error('Pointer lock request failed on resume:', err);
+                // Continue without pointer lock if it fails
+            });
+        }
         setCursorActive(false);
     }
 
@@ -365,8 +375,9 @@ class Game {
             this.botManager.clearAllBots();
         }
 
-        // Clear scene background
-        this.scene.background = null;
+        // Restore original blue background for main menu
+        this.scene.background = new THREE.Color(0x87ceeb);
+        this.updateFogSettings(); // Also update fog settings
         // Re-start the animation loop for the menu screen (if it was stopped)
         if (!this.animationFrameId) {
             this.animate();
@@ -404,7 +415,8 @@ class Game {
     }
 
     onPointerlockChange() {
-        if (document.pointerLockElement !== this.canvas && this.gameState === 'playing') {
+        // Don't auto-pause if we're handling escape key input
+        if (document.pointerLockElement !== this.canvas && this.gameState === 'playing' && !this.isHandlingEscape) {
             this.pauseGame();
         }
     }
@@ -439,12 +451,17 @@ class Game {
         }
 
         if (input.escape) {
+            this.isHandlingEscape = true;
             if (this.gameState === 'paused') {
                 this.resumeGame();
             } else if (this.gameState === 'playing') {
                 this.pauseGame();
             }
             clearEscapeInput();
+            // Reset flag after a short delay
+            setTimeout(() => {
+                this.isHandlingEscape = false;
+            }, 100);
         }
 
         if (this.gameState === 'playing') {

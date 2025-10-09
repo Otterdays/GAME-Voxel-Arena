@@ -1,7 +1,7 @@
 # 🎮 Voxel Arena
 <div align="center">
 
-![Voxel Arena Screenshot](main.png)
+![Voxel Arena Screenshot](assets/main.png)
 
 **An intense, browser-based 3D arena shooter with advanced AI combat.**
 
@@ -36,9 +36,10 @@ git clone https://github.com/AfyKirby1/Voxel-Arena.git
 cd Voxel-Arena
 
 # Launch (Windows)
-launch.bat
+scripts/launch.bat
 
 # Or manually
+cd game
 python -m http.server 8000
 # Then visit http://localhost:8000
 ```
@@ -147,21 +148,43 @@ This is **Phase 1** - a complete single-player warfare experience. **Phase 2** b
 
 ```
 🎮 Voxel-Arena/
-├── 📄 index.html          # Main game file
-├── 🎨 style.css           # Retro UI styling  
-├── 🚀 launch.bat          # Windows launcher
-├── 📁 src/                # Game modules
-│   ├── 🎯 main.js         # Core engine
-│   ├── 👤 player.js       # Player controls
-│   ├── 🔫 glock.js        # Weapon system
-│   ├── 🤖 bot/            # AI bot system
-│   │   ├── Bot.js         # Main bot class
-│   │   ├── BotBrain.js    # AI decision making
-│   │   ├── BotMovement.js # Pathfinding & movement
-│   │   └── ...            # 6 more bot modules
-│   ├── 🏟️ arena*.js       # Map definitions
-│   └── 🖥️ ui.js           # Interface
-└── 📚 documents/          # Documentation
+├── 📁 game/               # Main game files
+│   ├── 📄 index.html      # Main game file
+│   ├── 🎨 style.css       # Retro UI styling  
+│   └── 📁 src/            # Game modules
+│       ├── core/          # Core engine systems
+│       │   ├── 🎯 main.js # Main game engine
+│       │   ├── ⚡ physics.js # Collision detection
+│       │   ├── ⌨️ input.js # Input handling
+│       │   └── ⚙️ settings.js # Game settings
+│       ├── player/        # Player systems
+│       │   ├── 👤 player.js # Player controller
+│       │   ├── 🎭 character.js # Character model
+│       │   ├── 🔫 glock.js # Weapon system
+│       │   └── 💥 bullet.js # Projectile system
+│       ├── world/         # World/arena systems
+│       │   ├── 🏟️ arena*.js # Map definitions
+│       │   └── 🧱 structures.js # Structure definitions
+│       ├── ui/            # User interface systems
+│       │   ├── 🖥️ ui.js # Main UI controller
+│       │   └── 🗺️ minimap.js # Minimap system
+│       └── systems/       # Game systems
+│           └── 🤖 bot/    # AI bot system
+│               ├── Bot.js # Main bot class
+│               ├── BotBrain.js # AI decision making
+│               ├── BotMovement.js # Pathfinding & movement
+│               └── ...    # 6 more bot modules
+├── 📁 assets/             # Game assets
+│   ├── 🎵 audio/          # Sound files
+│   └── 🖼️ *.png           # Images and icons
+├── 📁 docs/               # Documentation
+│   ├── 📋 SUMMARY.md      # Project overview
+│   ├── 🏗️ ARCHITECTURE.md # Technical docs
+│   └── 📝 SCRATCHPAD.md   # Development notes
+├── 📁 scripts/            # Launch scripts
+│   └── 🚀 launch.bat      # Windows launcher
+├── 📁 tools/              # Development tools
+└── 📄 README.md           # This file
 ```
 
 ---
@@ -175,8 +198,9 @@ This is **Phase 1** - a complete single-player warfare experience. **Phase 2** b
 # Clone and serve locally
 git clone https://github.com/AfyKirby1/Voxel-Arena.git
 cd Voxel-Arena
-launch.bat  # Windows
+scripts/launch.bat  # Windows
 # or
+cd game
 python -m http.server 8000  # Manual
 ```
 
@@ -312,7 +336,7 @@ launch.bat  # Windows
 
 ### 🎮 **Epic Battle Scene**
 
-![Voxel Arena Epic Battle Concept](Gemini_Generated_Image_207tv0207tv0207t.png)
+![Voxel Arena Epic Battle Concept](assets/Gemini_Generated_Image_207tv0207tv0207t.png)
 
 *Generated concept art showcasing the intense Red vs Blue team warfare in our voxel-based arena environments*
 

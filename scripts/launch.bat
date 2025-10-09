@@ -12,6 +12,9 @@ echo.
 echo Press Ctrl+C to stop the server
 echo.
 
+REM Change to game directory
+cd /d "%~dp0..\game"
+
 REM Check if Python is available
 python --version >nul 2>&1
 if %errorlevel% equ 0 (
@@ -31,7 +34,7 @@ if %errorlevel% equ 0 (
         echo 1. Python 3.x (recommended)
         echo 2. Node.js with npx
         echo.
-        echo Or simply open index.html directly in your browser.
+        echo Or simply open game/index.html directly in your browser.
         echo.
         pause
         exit /b 1

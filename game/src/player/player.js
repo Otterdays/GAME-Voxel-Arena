@@ -1,7 +1,7 @@
 import { createCharacterModel } from './character.js';
-import { getInputState, clearLookInput } from './input.js';
-import { getSetting } from './settings.js';
-import { checkCollision } from './physics.js';
+import { getInputState, clearLookInput } from '../core/input.js';
+import { getSetting } from '../core/settings.js';
+import { checkCollision } from '../core/physics.js';
 
 // Player constants
 const PLAYER_RADIUS = 0.5;

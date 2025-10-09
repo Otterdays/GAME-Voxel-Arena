@@ -1,4 +1,4 @@
-import { getSetting } from './settings.js';
+import { getSetting } from '../core/settings.js';
 
 export class Glock {
     constructor(parent, game) {

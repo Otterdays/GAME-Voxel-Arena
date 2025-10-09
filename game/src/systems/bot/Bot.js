@@ -18,9 +18,9 @@ import { BotPersonality } from './BotPersonality.js';
 import { BotCombat } from './BotCombat.js';
 import { BotMovement } from './BotMovement.js';
 import { BotCommunication } from './BotCommunication.js';
-import { createCharacterModel } from '../character.js';
-import { checkCollision } from '../physics.js';
-import { Glock } from '../glock.js'; // Import Glock class
+import { createCharacterModel } from '../../player/character.js';
+import { checkCollision } from '../../core/physics.js';
+import { Glock } from '../../player/glock.js'; // Import Glock class
 
 export class Bot {
     constructor(game, id, difficulty = 'medium', team = 'red') {

@@ -6,24 +6,24 @@ Voxel Arena is a 3D FPS game built with HTML, CSS, and JavaScript. Three.js is u
 
 ## Components
 
--   **`index.html`**: The main entry point of the application. It contains the canvas for the game, the HTML structure for the UI menus, and loads the global Three.js library.
--   **`style.css`**: Provides styling for all UI elements, including menus and the in-game HUD.
--   **`src/main.js`**: The core of the game. It initializes the Three.js scene (relying on the global `THREE` object), manages the main game loop, controls the overall game state, and manages the lifecycle of bullets.
--   **`src/arena.js`**: Acts as a dispatcher for arena creation. It imports specific arena definitions and, based on a `mapId`, calls the appropriate arena creation function.
--   **`src/arena1.js`**: Defines the first arena, including its geometry, materials, and obstacles (relying on the global `THREE` object).
--   **`src/arena2.js`**: Defines the second, larger, and more complex arena with varied obstacles and colors (relying on the global `THREE` object).
--   **`src/player.js`**: Handles player creation, movement, and first-person camera controls. It uses the character model from `src/character.js`. To prevent the camera from clipping into the player's own model, the model is assigned to a separate rendering layer, making it invisible to the main camera.
--   **`src/glock.js`**: Manages the player's weapon, including its model, iron sights, firing mechanism, and sound effects. It creates bullets when fired (relying on the global `THREE` object).
--   **`src/bullet.js`**: Defines the `Bullet` class, including its appearance (dark orange sphere), movement logic, and lifetime (relying on the global `THREE` object).
--   **`src/ui.js`**: Controls the visibility and interaction of all UI components (start menu, settings, pause menu, HUD), including dynamic population of map selection buttons and custom toggle switches for settings.
--   **`src/minimap.js`**: **Completely rebuilt minimap system (v0.21)** - Renders a top-down minimap on the HUD with dynamic element creation. Displays player position (green dot), direction indicator, structures (gray rectangles), and bots (red/blue dots by team). Features 4x zoom level, proper coordinate system, and self-contained DOM creation with no HTML dependencies.
--   **`src/input.js`**: Captures and processes all keyboard and mouse input, managed by a customizable keybinding system.
--   **`src/settings.js`**: Manages persistent game settings like audio volume and keybindings, potentially using browser `localStorage`.
--   **`src/structures.js`**: Defines the `Structure` class, a data representation for all world objects that can be collided with.
--   **`src/physics.js`**: Handles collision detection between the player and structures.
--   **`src/character.js`**: Defines the procedural "bean" character model, created by combining a `CylinderGeometry` and two `SphereGeometry` objects.
--   **`src/avatar.js`**: Handles the logic for the avatar editor, including creating a new Three.js scene and rendering the player model.
--   **`src/customComponents.js`**: Custom UI components (CustomDropdown, CustomSlider) that match the game's aesthetic and work properly with the custom cursor system.
+-   **`game/index.html`**: The main entry point of the application. It contains the canvas for the game, the HTML structure for the UI menus, and loads the global Three.js library.
+-   **`game/style.css`**: Provides styling for all UI elements, including menus and the in-game HUD.
+-   **`game/src/core/main.js`**: The core of the game. It initializes the Three.js scene (relying on the global `THREE` object), manages the main game loop, controls the overall game state, and manages the lifecycle of bullets.
+-   **`game/src/world/arena.js`**: Acts as a dispatcher for arena creation. It imports specific arena definitions and, based on a `mapId`, calls the appropriate arena creation function.
+-   **`game/src/world/arena1.js`**: Defines the first arena, including its geometry, materials, and obstacles (relying on the global `THREE` object).
+-   **`game/src/world/arena2.js`**: Defines the second, larger, and more complex arena with varied obstacles and colors (relying on the global `THREE` object).
+-   **`game/src/player/player.js`**: Handles player creation, movement, and first-person camera controls. It uses the character model from `game/src/player/character.js`. To prevent the camera from clipping into the player's own model, the model is assigned to a separate rendering layer, making it invisible to the main camera.
+-   **`game/src/player/glock.js`**: Manages the player's weapon, including its model, iron sights, firing mechanism, and sound effects. It creates bullets when fired (relying on the global `THREE` object).
+-   **`game/src/player/bullet.js`**: Defines the `Bullet` class, including its appearance (dark orange sphere), movement logic, and lifetime (relying on the global `THREE` object).
+-   **`game/src/ui/ui.js`**: Controls the visibility and interaction of all UI components (start menu, settings, pause menu, HUD), including dynamic population of map selection buttons and custom toggle switches for settings.
+-   **`game/src/ui/minimap.js`**: **Completely rebuilt minimap system (v0.21)** - Renders a top-down minimap on the HUD with dynamic element creation. Displays player position (green dot), direction indicator, structures (gray rectangles), and bots (red/blue dots by team). Features 4x zoom level, proper coordinate system, and self-contained DOM creation with no HTML dependencies.
+-   **`game/src/core/input.js`**: Captures and processes all keyboard and mouse input, managed by a customizable keybinding system.
+-   **`game/src/core/settings.js`**: Manages persistent game settings like audio volume and keybindings, potentially using browser `localStorage`.
+-   **`game/src/world/structures.js`**: Defines the `Structure` class, a data representation for all world objects that can be collided with.
+-   **`game/src/core/physics.js`**: Handles collision detection between the player and structures.
+-   **`game/src/player/character.js`**: Defines the procedural "bean" character model, created by combining a `CylinderGeometry` and two `SphereGeometry` objects.
+-   **`game/src/player/avatar.js`**: Handles the logic for the avatar editor, including creating a new Three.js scene and rendering the player model.
+-   **`game/src/ui/customComponents.js`**: Custom UI components (CustomDropdown, CustomSlider) that match the game's aesthetic and work properly with the custom cursor system.
 
 ## Game Flow and Menu Navigation
 
@@ -437,3 +437,214 @@ A custom scrollbar system has been implemented to maintain visual consistency wi
 - **Root Cause**: Missing null checks for UI elements in `getMapSettings()` function
 - **Solution**: Added comprehensive null checks with fallback values
 - **Result**: Game handles missing UI elements gracefully without crashes
+
+## Arena Builder Desktop Application (December 2024)
+
+A sleek Windows desktop application for visually designing custom arena maps with an integrated asset library has been added to the project.
+
+### Architecture
+
+The Arena Builder is an Electron desktop application located in the `tools/arena-builder-desktop/` directory that runs independently from the main game.
+
+**Desktop Application Files:**
+- **`main.js`**: Electron main process with IPC handlers and native dialogs
+- **`preload.js`**: Security bridge between main and renderer processes
+- **`index.html`**: Modern UI layout with toolbar, panels, and asset library
+- **`style.css`**: VSCode-inspired modern dark theme
+- **`package.json`**: Dependencies and electron-builder configuration
+- **`launch.bat`**: Simple Windows launcher
+
+**Source Modules (src/):**
+- **`editor.js`**: Main controller with drag-drop and asset integration
+- **`assetLibrary.js`**: Asset management with 12 built-in presets
+- **`canvas2d.js`**: 2D grid editor with drop zones and pan/zoom
+- **`preview3d.js`**: 3D preview with mouse controls (drag to rotate, scroll to zoom)
+- **`structures.js`**: Structure class (compatible with game)
+- **`tools.js`**: Editor tools (place, move, resize, delete, duplicate)
+- **`ui.js`**: UI management and property panels
+- **`exporter.js`**: JavaScript code generator
+
+**Note**: The Arena Builder's `structures.js` is compatible with `game/src/world/structures.js` to ensure seamless integration.
+
+### Features
+
+**Modern Desktop UI:**
+- VSCode-inspired dark theme (sleek, professional)
+- Native Windows integration
+- Smooth animations and transitions
+- Toolbar with tool selection
+- Three-panel layout: Asset Library, 2D Editor, 3D Preview, Properties
+
+**Asset Library System:**
+- 12 built-in assets ready to use
+  - Structures: Large Ground (100x2x100), Medium Ground (50x2x50)
+  - Walls: Standard (2x10x20), Corner (10x10x2), Tall (2x15x20)
+  - Platforms: Small (15x2x15), Large (25x2x25), Elevated (20x2x20)
+  - Obstacles: Cube (10x10x10), Tall (5x10x5), Wide (20x6x8), Low Cover (15x5x3)
+- Category filtering (All, Structures, Walls, Platforms, Obstacles)
+- Search functionality
+- Thumbnail previews
+- Import custom JSON assets
+- Persistent storage in app data folder
+
+**Drag-and-Drop Workflow:**
+- Drag assets from library
+- Drop onto 2D canvas at mouse position
+- Visual drop indicator with crosshair
+- Instant placement with preview updates
+- Grid-snapped coordinates
+
+**Interactive 3D Preview:**
+- Click + Drag: Rotate camera around scene
+- Drag Up/Down: Adjust camera height
+- Mouse Wheel: Zoom in/out (30-200 units)
+- Toggle Button: Enable/disable auto-rotation
+- Rotating icon when auto-rotate active
+- Default: Manual control (no spinning)
+
+**Structure Tools:**
+- Place: Click to add structures with configurable properties
+- Move: Drag structures to reposition
+- Resize: Adjust dimensions via properties panel
+- Delete: Remove structures with click
+- Duplicate: Create copies with automatic offset
+- Presets: Ground, Wall, Platform, Obstacle templates
+
+**Spawn Point Editor:**
+- Player spawn points (teal markers)
+- Red team bot spawn areas (red markers)
+- Blue team bot spawn areas (blue markers)
+- Visual indicators in both 2D and 3D views
+
+**Native File Operations:**
+- Save Project (Ctrl+S): Windows save dialog
+- Load Project (Ctrl+O): Windows open dialog
+- Export Arena (Ctrl+E): Native file picker for .js export
+- Import Assets: Multi-file selection dialog
+- New Project (Ctrl+N): Clear with confirmation
+
+**Export System:**
+- Generates JavaScript code matching game's arena format exactly
+- Copy to clipboard functionality
+- Save to file with native Windows dialog
+- Code preview before export
+- Configurable arena number
+
+### Technical Implementation
+
+**2D Grid Editor:**
+- HTML5 Canvas 2D rendering
+- Grid-based placement system (10-unit cells)
+- Pan with right-click drag
+- Zoom with mouse wheel (0.1x to 5.0x)
+- Coordinate system matching game (X/Z plane)
+- Structure selection and manipulation
+
+**3D Preview:**
+- Three.js r128 (same version as game)
+- Real-time structure rendering
+- Auto-rotating camera for visualization
+- Lighting and shadows matching game
+- Spawn point markers with team colors
+- Grid and axis helpers for orientation
+
+**Export Format:**
+```javascript
+import { Structure } from './structures.js';
+
+export function createArenaX() {
+    const structures = [];
+    // ... structure definitions ...
+    return {
+        structures: structures,
+        spawnPoint: {...},
+        spawnPoints: [...],
+        botSpawnAreas: { red: [...], blue: [...] },
+        metadata: {...}
+    };
+}
+```
+
+### Integration Workflow
+
+1. Launch desktop app (`npm start` or built .exe)
+2. Browse asset library (12 built-in assets)
+3. Drag assets from library onto 2D canvas
+4. Use mouse to interact with 3D preview (drag to rotate)
+5. Fine-tune with structure tools (move, resize, etc.)
+6. Add spawn points for players and bots
+7. Configure arena metadata (name, description, size, etc.)
+8. Click Export button (Ctrl+E)
+9. Save to file using native Windows dialog
+10. Copy exported file to `Voxel-Arena/src/arenaX.js`
+11. Import in `Voxel-Arena/src/arena.js`
+12. Test new arena in game
+
+### System Requirements
+
+- **OS**: Windows 10 or 11 (64-bit)
+- **Node.js**: 16+ for development/building
+- **RAM**: 4GB minimum, 8GB recommended
+- **Disk**: 500MB for app + dependencies
+- **GPU**: Any GPU with OpenGL 2.0+ for 3D preview
+
+### Built Application
+
+- Electron 28 (includes Chromium)
+- WebGL 2.0 for 3D rendering
+- Native Windows dialogs
+- File system access for projects
+- App data storage for asset library
+
+### Design Philosophy
+
+- **Modern Dark Theme**: VSCode-inspired professional aesthetic
+- **Color Scheme**: 
+  - Background: #1e1e1e, #252526 (dark grays)
+  - Text: #cccccc (light gray)
+  - Accent: #007acc (blue)
+  - Danger: #f48771 (red)
+  - Success: #89d185 (green)
+  - Player: #4ec9b0 (teal)
+- **Typography**: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto
+- **UI Elements**: Smooth transitions, subtle shadows, native-feel buttons
+- **Distinct from Game**: Intentionally different aesthetic for professional tool feel
+
+### Performance
+
+- 60fps target for both 2D and 3D rendering
+- Efficient structure management (100+ structures supported)
+- Real-time preview updates without lag
+- Optimized Three.js rendering
+- Minimal memory footprint
+
+### Installation & Building
+
+**Development:**
+```bash
+cd arena-builder-desktop
+npm install
+npm start
+```
+
+**Build Windows Executable:**
+```bash
+npm run build          # Creates installer in dist/
+npm run build:portable # Creates portable .exe
+```
+
+**Distribution:**
+- Installer: ~150MB (installs to Program Files)
+- Portable: ~200MB (runs from anywhere)
+- No installation required for portable version
+
+### Future Enhancements
+
+- 3D model import (GLTF, OBJ) for custom assets
+- Texture/material system for structures
+- Terrain height map support
+- Additional structure types (spheres, cylinders, ramps)
+- Asset marketplace/sharing
+- Arena validation and testing tools
+- Multi-monitor support
+- Custom camera positions/bookmarks

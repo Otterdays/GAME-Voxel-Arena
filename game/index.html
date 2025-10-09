@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voxel Arena</title>
-    <link rel="icon" type="image/png" href="main.png">
+    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
     <link rel="stylesheet" href="style.css">
     
     <!-- Preload critical resources -->
-    <link rel="preload" href="audio/main.wav" as="fetch" crossorigin>
+    <link rel="preload" href="assets/audio/main.wav" as="fetch" crossorigin>
     <link rel="preload" href="style.css" as="style">
     
     <!-- Resource hints -->
@@ -33,6 +33,11 @@
             <button id="settings-button">Settings</button>
             <button id="avatar-button">Avatar</button>
             <button id="quit-button">Quit</button>
+            
+            <!-- Floating Logo -->
+            <div id="floating-logo" class="floating-logo">
+                <img src="assets/main.png" alt="Voxel Arena Logo" />
+            </div>
         </div>
 
         <!-- Avatar Menu -->
@@ -298,6 +303,6 @@
 
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script type="module" src="src/main.js"></script>
+    <script type="module" src="src/core/main.js"></script>
 </body>
 </html>

@@ -38,7 +38,7 @@ function handleKeyDown(e) {
     if (action && state.move[action] !== undefined) {
         state.move[action] = true;
     }
-    if (key === 'escape') {
+    if (e.key === 'Escape' || key === 'escape') {
         state.escape = true;
     }
 }
@@ -49,7 +49,7 @@ function handleKeyUp(e) {
     if (action && state.move[action] !== undefined) {
         state.move[action] = false;
     }
-    if (key === 'escape') {
+    if (e.key === 'Escape' || key === 'escape') {
         state.escape = false;
     }
 }

@@ -1,8 +1,8 @@
 # Voxel Arena - Project Summary
 
-**Version**: 0.34  
+**Version**: 0.37  
 **Last Updated**: December 2024  
-**Status**: Phase 1 Complete + Custom Components & UI Fixes - Ready for Phase 2 Development
+**Status**: Phase 1 Complete + Desktop Arena Builder + Critical Bug Fixes - Ready for Phase 2 Development
 
 ## 🎯 Project Overview
 
@@ -122,6 +122,7 @@ Voxel Arena is a browser-based 3D first-person shooter built with vanilla JavaSc
 - [x] Character model grounding and visual improvements
 - [x] Speed balancing and friction optimization
 - [x] Combat system integration and target acquisition
+- [x] Pause menu functionality and background restoration
 
 ### 🚧 Phase 2 Planned (Future)
 - [ ] Multiplayer Networking
@@ -287,6 +288,64 @@ Voxel Arena is a browser-based 3D first-person shooter built with vanilla JavaSc
 - **Enhanced Error Handling**: Added comprehensive null checks for UI elements
 - **Custom Scrollbar Styling**: Added green-themed scrollbars matching game aesthetic
 - **Visual Consistency**: Improved overall UI consistency and professional appearance
+
+### Critical Bug Fixes (December 2024)
+- **Pause Menu Display Issue**: Fixed pause menu not appearing when pressing Escape key
+- **Root Cause**: Pause menu DOM element was incorrectly nested inside settings-menu instead of ui-container
+- **Solution**: Added `ensurePauseMenuInCorrectLocation()` function to fix DOM structure
+- **CSS Z-Index Fix**: Enhanced pause menu z-index to ensure visibility above all game elements
+- **Background Restoration**: Fixed main menu returning to black background instead of blue
+- **Solution**: Changed `quitToMainMenu()` to restore original blue background color
+- **Escape Key Detection**: Improved escape key handling for both uppercase and lowercase detection
+- **Pointer Events**: Fixed UI container pointer events for proper menu interaction
+
+## 🛠️ Development Tools
+
+### Arena Builder Desktop (Version 1.0 - December 2024)
+
+A sleek Windows desktop application for visually designing custom arena maps with an integrated asset library system.
+
+**Major Features:**
+- **Modern Dark UI**: VSCode-inspired interface (no retro green theme)
+- **Asset Library**: 12 built-in assets with drag-and-drop functionality
+- **Dual View Editor**: 2D grid + 3D preview with mouse controls
+- **Native Integration**: Windows file dialogs for save/load/export
+- **Interactive 3D**: Drag to rotate, scroll to zoom, optional auto-rotate
+- **Structure Tools**: Place, move, resize, delete, duplicate with presets
+- **Spawn Point Editor**: Player and team-specific bot spawn placement
+- **Export System**: Generate game-ready JavaScript code
+- **Project Management**: Native file operations with Windows dialogs
+
+**Location**: `tools/arena-builder-desktop/` directory (Electron desktop app)
+
+**Usage Workflow**:
+1. Run `npm start` or built .exe
+2. Drag assets from library onto canvas
+3. Use mouse to interact with 3D preview
+4. Export to JavaScript with native dialog
+5. Import into game
+
+**Technical Stack**:
+- **Desktop**: Electron 28 with native Windows integration
+- **Frontend**: Three.js r128 for 3D, HTML5 Canvas 2D
+- **Assets**: 12 built-in presets (structures, walls, platforms, obstacles)
+- **Storage**: Native file system with Windows dialogs
+- **UI**: Modern dark theme inspired by VSCode
+
+**Asset Library**:
+- Built-in: Large Ground, Medium Ground, 3 Wall types, 3 Platform types, 4 Obstacle types
+- Import custom: JSON format with drag-and-drop support
+- Categories: Structures, Walls, Platforms, Obstacles
+- Search and filter functionality
+- Persistent storage between sessions
+
+**3D Controls**:
+- Click + Drag: Rotate camera around scene
+- Vertical Drag: Adjust camera height
+- Mouse Wheel: Zoom in/out
+- Toggle Button: Enable/disable auto-rotation
+
+**Integration**: Exports match game's Structure system format exactly, allowing seamless integration of custom arenas.
 
 ### Long-term Goals
 - **Community Features**: User-generated content

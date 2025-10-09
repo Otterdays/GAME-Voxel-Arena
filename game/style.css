@@ -44,6 +44,7 @@ input, select, textarea {
     justify-content: center;
     align-items: center;
     pointer-events: none; /* Allow clicks to pass through by default */
+    z-index: 1000; /* Ensure UI is above game canvas */
 }
 
 .menu {
@@ -1265,6 +1266,7 @@ input, select, textarea {
     width: auto !important;
     min-width: 350px;
     padding: 40px !important;
+    z-index: 1000000 !important; /* Ensure pause menu appears above everything */
 }
 
 #pause-menu button {
@@ -1637,4 +1639,46 @@ input, select, textarea {
     max-width: 200px !important;
     max-height: 200px !important;
     display: block !important;
+}
+
+/* Floating Logo */
+.floating-logo {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 80px;
+    height: 80px;
+    z-index: 1000;
+    opacity: 0.8;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+}
+
+.floating-logo:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.floating-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 50%;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+    border: 2px solid rgba(0, 255, 0, 0.5);
+}
+
+/* Hide floating logo when not on start menu */
+.menu:not(#start-menu) .floating-logo {
+    display: none;
+}
+
+/* Responsive floating logo */
+@media (max-width: 768px) {
+    .floating-logo {
+        width: 60px;
+        height: 60px;
+        bottom: 15px;
+        right: 15px;
+    }
 }
