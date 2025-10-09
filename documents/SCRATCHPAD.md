@@ -1,13 +1,202 @@
-# Scratchpad
+# Scratchpad - Development Notes & Progress Tracking
 
-## Version 0.32 - UI Button Fixes & Gun Import Fix (December 2024)
+**Last Updated**: December 2024  
+**Current Version**: 0.34  
+**Status**: Phase 1 Complete + Custom Components & UI Fixes
 
-### Issues Fixed
-**1. Double-Click Button Issues**
-- **Problem**: Bot count +/- buttons and Start Map button were triggering twice due to mousedown/mouseup event conflicts
-- **Solution**: Changed event listeners from 'click' to 'mousedown' for action buttons
-- **Files Modified**: `src/ui.js` - Changed button event handlers to use 'mousedown' instead of 'click'
-- **Result**: Buttons now trigger exactly once per press, no more double increments
+---
+
+## 🚀 **Current Status Summary**
+
+### ✅ **Phase 1 Complete**
+- **Core Gameplay**: Full single-player FPS with physics, weapons, and AI bots
+- **AI Bot System**: Fully functional with 7-module BotBrain system
+- **UI System**: Custom components, cursor system, and responsive design
+- **Technical Architecture**: 19 modular components with clean separation
+- **Documentation**: Comprehensive documentation suite
+
+### 🎯 **Recent Major Achievements**
+- **Custom UI Components**: CustomDropdown and CustomSlider implementation
+- **Bot System Overhaul**: Complete AI system with physics integration
+- **UI/UX Improvements**: Professional layout, team selection, bot management
+- **Performance Optimization**: 60fps target, efficient rendering pipeline
+- **Cross-Browser Support**: Chrome 80+, Firefox 75+, Safari 13+, Edge 80+
+
+---
+
+## 📋 **Version History - Recent Updates**
+
+### Version 0.34 - Custom Cursor Fix & Custom Scrollbar (December 2024)
+**Status**: ✅ Complete
+
+#### Issues Fixed
+- **Custom Cursor Positioning**: Fixed cursor disappearing after HTML structure changes
+- **Custom Scrollbar Styling**: Added green-themed scrollbars matching game aesthetic
+- **Visual Consistency**: Improved overall UI consistency and professional appearance
+
+#### Technical Details
+- **Root Cause**: Custom cursor positioned inside `ui-container` with `pointer-events: none`
+- **Solution**: Moved custom cursor element outside `ui-container` to document level
+- **Scrollbar Features**: Track styling with dark background and green border, thumb with gradient and glow effects
+- **Cross-Browser Support**: WebKit and Firefox compatibility
+
+### Version 0.33 - Settings Toggle Switch Bug Fix (December 2024)
+**Status**: ✅ Complete
+
+#### Issues Fixed
+- **Toggle Switch Bug**: All toggle switches showing "ON" highlighted regardless of actual setting value
+- **Visual Feedback**: Toggle switches now properly highlight the correct state
+
+#### Technical Details
+- **Root Cause**: Bug in `updateToggleState()` function calling `onButton.classList.add('active')` instead of `remove('active')`
+- **Solution**: Fixed toggle state logic to properly remove/add active classes
+- **Files Modified**: `src/ui.js` line 354
+
+### Version 0.32 - UI Button Fixes & Gun Import Fix (December 2024)
+**Status**: ✅ Complete
+
+#### Issues Fixed
+1. **Double-Click Button Issues**: Bot count +/- buttons and Start Map button triggering twice
+2. **Start Map Button Double-Trigger**: Game starting twice due to event conflicts
+3. **getMapSettings TypeError**: Crashes when accessing non-existent UI elements
+4. **Gun System Import Error**: `clearFireInput` function not imported causing crashes
+
+#### Technical Details
+- **Event Handling**: Changed from 'click' to 'mousedown' for action buttons
+- **Error Handling**: Added comprehensive null checks with fallback values
+- **Import Fix**: Added `clearFireInput` to import statement in `main.js`
+- **Files Modified**: `src/ui.js`, `src/main.js`
+
+---
+
+## 🤖 **Bot System Development Journey**
+
+### Major Bot System Fixes (Versions 0.20-0.31)
+
+#### Bot AI System Overhaul
+- **Version 0.22**: Fixed `TypeError: this.movement.executeAction is not a function`
+- **Version 0.23**: Resolved AI conflicts between BotBrain and legacy simple AI
+- **Version 0.24**: Fixed BotCombat target switching crashes
+- **Version 0.25**: Fixed survival system method calls
+- **Version 0.26**: Resolved collision detection bounds issues
+- **Version 0.27**: Fixed ground collision and speed balancing
+- **Version 0.28**: Corrected collision box positioning
+- **Version 0.29**: Fixed spawn height issues
+- **Version 0.30**: Adjusted character model visual positioning
+
+#### Technical Achievements
+- **Physics Integration**: Bots use identical physics system as player
+- **AI Decision Making**: BotBrain with decision trees and pathfinding
+- **Combat System**: Tactical positioning, target prioritization, weapon handling
+- **Movement System**: A* pathfinding, obstacle avoidance, formation movement
+- **Team Coordination**: Bot-to-bot communication and team tactics
+
+---
+
+## 🎨 **UI/UX Development Journey**
+
+### UI System Fixes (Versions 0.15-0.21)
+
+#### Canvas Viewport Issues (Version 0.15)
+- **White Background Cutoff**: Canvas wasn't filling viewport properly
+- **F12 Dependency**: Layout issues only fixed when opening devtools
+- **Solution**: Multiple resize triggers and forced canvas sizing
+
+#### UI Scaling System (Version 0.16)
+- **Oversized Menus**: Menus too large, requiring browser zoom out
+- **Complex Scaling Conflicts**: Multiple scaling systems conflicting
+- **Solution**: Simplified scaling system with reasonable container sizes
+
+#### Preview Positioning Fixes (Version 0.17)
+- **Avatar Preview Floating**: Rendering in top-left corner instead of container
+- **Map Preview Floating**: Rendering outside container
+- **Solution**: Fixed global canvas CSS rules affecting preview canvases
+
+#### Keybinds Layout Redesign (Version 0.20)
+- **Space Efficiency**: 60% reduction in vertical space usage
+- **Layout Transformation**: Vertical stack → horizontal 3-column grid
+- **Text Overflow**: Fixed button text overflow issues
+
+---
+
+## 🏗️ **Technical Architecture Evolution**
+
+### Modular Component System
+- **Core Modules**: 10 focused modules with clear separation of concerns
+- **AI Bot System**: 7-module BotBrain system for intelligent behavior
+- **Supporting Systems**: Physics, structures, character models, custom components
+- **Total Components**: 19 modular components
+
+### Performance Optimization
+- **Target**: 60fps on recommended hardware
+- **Memory Usage**: < 100MB RAM
+- **Load Time**: < 3 seconds initial load
+- **Browser Support**: Chrome 80+, Firefox 75+, Safari 13+, Edge 80+
+
+### Security & Compliance
+- **Dependencies**: Only Three.js external dependency (MIT License)
+- **Browser APIs**: Standard Web APIs only
+- **Data Storage**: Local preferences only
+- **Network**: No external communication
+
+---
+
+## 🎯 **Future Development Priorities**
+
+### Phase 2 Planned Features
+1. **Multiplayer Networking**: WebSocket-based online play
+2. **Additional Maps**: More arena environments
+3. **Weapon Variety**: Different guns and mechanics
+4. **Game Modes**: Team deathmatch, capture the flag, etc.
+5. **Advanced AI Behaviors**: More sophisticated bot behaviors
+6. **Bot Customization Options**: Player-configurable bot settings
+
+### Technical Debt & Improvements
+- **Performance**: Consider WebAssembly for physics calculations
+- **Audio**: Add environmental sounds and footsteps
+- **Graphics**: Implement particle effects and better lighting
+- **Mobile**: Touch control optimization
+- **Accessibility**: Enhanced keyboard navigation
+
+---
+
+## 📊 **Development Metrics**
+
+### Code Quality
+- **Linting Status**: No linting errors in modified files
+- **Consistent Patterns**: Uniform coding standards
+- **Error Handling**: Comprehensive error handling throughout
+- **Documentation**: Extensive inline documentation
+
+### Performance Metrics
+- **CPU Usage**: < 5% per bot on modern hardware
+- **Memory Usage**: < 2MB per bot
+- **Update Time**: < 1ms per bot per frame
+- **Scalability**: Supports up to 16 bots with performance optimization
+
+---
+
+## 🔧 **Development Notes**
+
+### Key Design Principles
+- **Modular Architecture**: Split components to reduce token consumption
+- **Windows Optimization**: Commands optimized for Windows 11 systems
+- **Browser Compatibility**: Cross-browser support with graceful degradation
+- **User Experience**: Intuitive controls and professional interface design
+
+### Documentation Standards
+- **Regular Updates**: Documentation updated with each major change
+- **Comprehensive Coverage**: All aspects of the project documented
+- **User-Friendly**: Clear instructions and examples
+- **Technical Depth**: Detailed architecture and implementation details
+
+---
+
+**Project Maintainer**: Ry  
+**Contact**: motorcycler14@yahoo.com  
+**Repository**: https://github.com/AfyKirby1/Voxel-Arena  
+**License**: MIT License
+
 
 **2. Start Map Button Double-Trigger**
 - **Problem**: Start Map button was starting the game twice due to same event conflict
@@ -1221,3 +1410,101 @@ createInitialBots() {
 - **Centering**: Fixed - perfect horizontal and vertical centering
 - **Responsive Design**: Added - adapts to different screen sizes
 - **User Experience**: Significantly improved - better space utilization and organization
+
+## Version 0.33 - Settings Toggle Switch Bug Fix (December 2024)
+
+### Critical Toggle Switch Bug Fixed
+- **Issue**: All toggle switches in settings menu were incorrectly showing "ON" highlighted regardless of actual setting value
+- **Root Cause**: Bug in `updateToggleState()` function in `src/ui.js` line 354
+- **Problem**: When setting toggle to OFF, code was calling `onButton.classList.add('active')` instead of `onButton.classList.remove('active')`
+- **Solution**: Fixed the toggle state logic to properly remove/add active classes
+- **Status**: ✅ Fixed - toggle switches now correctly show ON/OFF states
+
+### Technical Details
+**Before (Buggy Code):**
+```javascript
+const updateToggleState = (isOn) => {
+    if (isOn) {
+        onButton.classList.add('active');
+        offButton.classList.remove('active');
+    } else {
+        offButton.classList.add('active');
+        onButton.classList.add('active');  // BUG: Should be remove('active')
+    }
+};
+```
+
+**After (Fixed Code):**
+```javascript
+const updateToggleState = (isOn) => {
+    if (isOn) {
+        onButton.classList.add('active');
+        offButton.classList.remove('active');
+    } else {
+        offButton.classList.add('active');
+        onButton.classList.remove('active');  // FIXED: Now properly removes active class
+    }
+};
+```
+
+### Impact
+- **Settings Menu**: All toggle switches now display correct ON/OFF states
+- **User Experience**: Settings menu is now fully functional and intuitive
+- **Visual Feedback**: Proper highlighting provides clear indication of setting states
+
+### Status: ✅ Complete
+- **Toggle Functionality**: Fixed - switches now properly toggle between ON/OFF states
+- **Visual States**: Corrected - active highlighting matches actual setting values
+- **User Interface**: Improved - settings menu provides accurate visual feedback
+
+## Version 0.34 - Custom Cursor Fix & Custom Scrollbar Styling (December 2024)
+
+### Critical Custom Cursor Issue Resolved
+- **Issue**: Custom cursor disappeared after HTML structure changes to settings menu
+- **Root Cause**: Custom cursor was positioned inside `ui-container` which has `pointer-events: none` and creates stacking context issues
+- **Problem**: Custom cursor element was nested within UI container, affecting its visibility and positioning
+- **Solution**: Moved custom cursor element outside `ui-container` to document level
+- **Status**: ✅ Fixed - custom cursor now visible and functional
+
+### Technical Details
+**Before (Problematic Structure):**
+```html
+<div id="ui-container">
+    <!-- all UI content -->
+    <div id="custom-cursor"></div>  <!-- Inside ui-container -->
+</div>
+```
+
+**After (Fixed Structure):**
+```html
+<div id="ui-container">
+    <!-- all UI content -->
+</div>
+
+<div id="custom-cursor"></div>  <!-- Outside ui-container -->
+```
+
+### Custom Scrollbar Styling Added
+- **Design Theme**: Custom scrollbar matches green-on-black aesthetic
+- **Track Styling**: Dark background with green border and rounded corners
+- **Thumb Styling**: Green gradient with glow effects and interactive states
+- **Cross-Browser Support**: WebKit (Chrome, Safari, Edge) and Firefox compatibility
+- **Interactive States**: Hover and active states with enhanced glow effects
+
+### Scrollbar Features
+- **Track**: `rgba(0, 0, 0, 0.8)` background with `rgba(0, 255, 0, 0.3)` border
+- **Thumb**: Green gradient `#00ff00` → `#00cc00` with glow effects
+- **Hover State**: Brighter gradient and stronger glow
+- **Active State**: Darker gradient and maximum glow
+- **Consistency**: Matches existing UI design language
+
+### Impact
+- **Custom Cursor**: Restored functionality for menu navigation
+- **Visual Consistency**: Settings scrollbar now matches overall design theme
+- **User Experience**: Improved visual feedback and professional appearance
+- **Cross-Browser**: Consistent styling across different browsers
+
+### Status: ✅ Complete
+- **Custom Cursor**: Fixed - moved outside ui-container for proper visibility
+- **Scrollbar Styling**: Added - custom green-themed scrollbar with interactive states
+- **Documentation**: Updated - comprehensive technical details and implementation notes

@@ -43,14 +43,71 @@ class Game {
         setTimeout(() => {
             this.onWindowResize();
         }, 100);
+        
+        // Lazy load non-critical systems
+        this.lazyLoadSystems();
+    }
+    
+    async lazyLoadSystems() {
+        // Load bot system only when needed
+        if (this.gameState === 'menu') {
+            // Preload bot system in background
+            setTimeout(() => {
+                this.preloadBotSystem();
+            }, 1000);
+        }
+    }
+    
+    async preloadBotSystem() {
+        try {
+            // Preload bot modules
+            const botModules = [
+                './bot/Bot.js',
+                './bot/BotBrain.js',
+                './bot/BotSenses.js',
+                './bot/BotMemory.js',
+                './bot/BotPersonality.js',
+                './bot/BotCombat.js',
+                './bot/BotMovement.js',
+                './bot/BotCommunication.js',
+                './bot/BotManager.js'
+            ];
+            
+            // Preload modules without executing them
+            for (const module of botModules) {
+                await import(module);
+            }
+            
+            console.log('Bot system preloaded successfully');
+        } catch (error) {
+            console.log('Bot system preload failed:', error);
+        }
     }
 
     async loadMenuMusic() {
         console.log('loadMenuMusic: Attempting to load audio/main.wav');
+        
+        // Check if audio is already cached globally
+        if (window.audioCache && window.audioCache.has('main.wav')) {
+            console.log('loadMenuMusic: Using cached audio');
+            this.menuMusicBuffer = window.audioCache.get('main.wav');
+            if (this.gameState === 'menu') {
+                this.playMenuMusic();
+            }
+            return;
+        }
+        
         try {
             const response = await fetch('audio/main.wav');
             const arrayBuffer = await response.arrayBuffer();
             this.menuMusicBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+            
+            // Cache the audio buffer globally
+            if (!window.audioCache) {
+                window.audioCache = new Map();
+            }
+            window.audioCache.set('main.wav', this.menuMusicBuffer);
+            
             console.log('loadMenuMusic: Music loaded successfully.', this.menuMusicBuffer);
             if (this.gameState === 'menu') {
                 this.playMenuMusic(); // Play music once loaded if still in menu

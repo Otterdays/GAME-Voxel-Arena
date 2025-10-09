@@ -23,6 +23,7 @@ Voxel Arena is a 3D FPS game built with HTML, CSS, and JavaScript. Three.js is u
 -   **`src/physics.js`**: Handles collision detection between the player and structures.
 -   **`src/character.js`**: Defines the procedural "bean" character model, created by combining a `CylinderGeometry` and two `SphereGeometry` objects.
 -   **`src/avatar.js`**: Handles the logic for the avatar editor, including creating a new Three.js scene and rendering the player model.
+-   **`src/customComponents.js`**: Custom UI components (CustomDropdown, CustomSlider) that match the game's aesthetic and work properly with the custom cursor system.
 
 ## Game Flow and Menu Navigation
 
@@ -143,10 +144,58 @@ To address issues with the browser's Pointer Lock API and provide a smoother use
 *   **Simulated UI Interaction:** Mouse movements control the position of this custom cursor. Clicks are simulated on underlying UI elements based on the custom cursor's position.
 
 **Implementation Details:**
-*   **`index.html` & `style.css`:** A dedicated `div` (`#custom-cursor`) is used for the custom cursor, styled to be hidden by default and appear when needed. CSS ensures the system cursor remains hidden (`cursor: none !important;`) over interactive UI elements. Custom CSS classes (`.toggle-switch`, `.toggle-switch button`, `.toggle-switch button.active`) are defined to style the new ON/OFF toggle buttons in the settings menu, providing visual feedback for their state.
+*   **`index.html` & `style.css`:** A dedicated `div` (`#custom-cursor`) is used for the custom cursor, positioned outside the `ui-container` to avoid stacking context issues. CSS ensures the system cursor remains hidden (`cursor: none !important;`) over interactive UI elements. Custom CSS classes (`.toggle-switch`, `.toggle-switch button`, `.toggle-switch button.active`) are defined to style the new ON/OFF toggle buttons in the settings menu, providing visual feedback for their state.
 *   **`src/ui.js`:** Manages the visibility (`showCustomCursor()`, `hideCustomCursor()`) and visual position (`updateCustomCursorPosition()`) of the custom cursor. It also controls the `pointer-events` on the main UI container to allow/disallow clicks based on cursor activity. The `populateVideoSettings()` function now dynamically creates the custom toggle buttons for settings like "Walk Wobble", handling their state and interaction with the `settings.js` module.
 *   **`src/input.js`:** Contains logic to switch between camera control (when playing) and custom cursor movement (when paused). The `mousemove` listener is attached to `document.body` to ensure robust tracking of the system mouse across the entire window. When the custom cursor is active, `handleMouseMove` updates the custom cursor's absolute position (`e.clientX`, `e.clientY`), ensuring it always tracks and snaps to the system mouse. `handleMouseDown` uses `document.elementFromPoint()` to identify and trigger click events on UI elements beneath the custom cursor.
 *   **`src/main.js`:** Orchestrates the game state transitions. `pauseGame()` and `resumeGame()` now primarily manage the game's `gameState` and call `setCursorActive(true/false)` (from `input.js`) and `UIManager.showPauseMenu()/showHUD()` (from `ui.js`). Pointer lock is automatically requested by `startGame()` and when clicking the `Resume` button (as these are direct user gestures). The `onPointerlockChange` listener is crucial: if the pointer lock is lost while the game is in the 'playing' state (e.g., user presses 'Escape' or browser-initiated release), it automatically calls `pauseGame()`, ensuring the mouse cannot escape the game without the pause menu appearing. If resuming via the 'Escape' key, a manual click on the canvas is required to re-acquire pointer lock.
+
+## Custom UI Components System (December 2024)
+
+To address custom cursor issues with native HTML elements and improve visual consistency, a custom UI components system has been implemented.
+
+### Custom Dropdown Component
+- **Purpose**: Replaces native HTML `<select>` elements that caused custom cursor positioning issues
+- **Features**: 
+  - Smooth hover effects with color transitions
+  - Animated arrow rotation when opening/closing
+  - Selected option highlighting
+  - Keyboard navigation support
+  - Custom cursor compatibility
+- **Styling**: Matches game's green neon aesthetic with gradients, glows, and animations
+- **Integration**: Used in settings menu for dropdown selections
+
+### Custom Slider Component
+- **Purpose**: Replaces native HTML `<input type="range">` elements
+- **Features**:
+  - Visual track with custom styling
+  - Interactive thumb with hover effects
+  - Real-time value display
+  - Smooth animations and transitions
+  - Custom cursor compatibility
+- **Styling**: Consistent with game's visual theme
+- **Integration**: Used for volume controls and other slider settings
+
+### Technical Implementation
+- **File**: `src/customComponents.js` - Contains CustomDropdown and CustomSlider classes
+- **CSS Integration**: Custom styles in `style.css` with `.custom-dropdown` and `.custom-slider` classes
+- **Event Handling**: Proper mouse event management for custom cursor compatibility
+- **Accessibility**: Maintains keyboard navigation and screen reader support
+
+## Custom Scrollbar System
+
+A custom scrollbar system has been implemented to maintain visual consistency with the game's green-on-black aesthetic throughout the user interface.
+
+**Design Features:**
+*   **Track Styling:** Dark background (`rgba(0, 0, 0, 0.8)`) with green border (`rgba(0, 255, 0, 0.3)`) and rounded corners
+*   **Thumb Styling:** Green gradient (`#00ff00` → `#00cc00`) with glow effects and interactive states
+*   **Interactive States:** Hover and active states with enhanced glow effects
+*   **Cross-Browser Support:** WebKit (Chrome, Safari, Edge) and Firefox compatibility
+
+**Implementation Details:**
+*   **CSS Pseudo-elements:** Uses `::-webkit-scrollbar`, `::-webkit-scrollbar-track`, and `::-webkit-scrollbar-thumb` for WebKit browsers
+*   **Firefox Support:** Uses `scrollbar-width` and `scrollbar-color` properties for Firefox compatibility
+*   **Consistent Theming:** Matches existing UI design language with green accents and dark backgrounds
+*   **Enhanced UX:** Provides visual feedback through hover and active states
 
 ## Canvas Viewport and UI Scaling Fixes (December 2024)
 
@@ -362,3 +411,29 @@ To address issues with the browser's Pointer Lock API and provide a smoother use
 - Set reasonable maximum widths to prevent oversizing
 - Use flexbox for adaptive layouts
 - Maintain consistent gaps and padding
+
+## Recent UI System Fixes (December 2024)
+
+### Custom Cursor Positioning Fix
+- **Issue**: Custom cursor disappeared after HTML structure changes to settings menu
+- **Root Cause**: Custom cursor was positioned inside `ui-container` which has `pointer-events: none`
+- **Solution**: Moved custom cursor element outside `ui-container` to document level
+- **Result**: Custom cursor now visible and functional in all menus
+
+### Settings Toggle Switch Bug Fix
+- **Issue**: All toggle switches showing "ON" highlighted regardless of actual setting value
+- **Root Cause**: Bug in `updateToggleState()` function calling wrong class methods
+- **Solution**: Fixed toggle state logic to properly remove/add active classes
+- **Result**: Toggle switches now correctly show ON/OFF states
+
+### Button Interaction Fixes
+- **Issue**: Double-click button issues with bot count +/- buttons and Start Map button
+- **Root Cause**: Event listener conflicts between mousedown/mouseup events
+- **Solution**: Changed event listeners from 'click' to 'mousedown' for action buttons
+- **Result**: Buttons now trigger exactly once per press
+
+### Enhanced Error Handling
+- **Issue**: `TypeError: Cannot read properties of null` when accessing non-existent UI elements
+- **Root Cause**: Missing null checks for UI elements in `getMapSettings()` function
+- **Solution**: Added comprehensive null checks with fallback values
+- **Result**: Game handles missing UI elements gracefully without crashes

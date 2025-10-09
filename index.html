@@ -6,6 +6,14 @@
     <title>Voxel Arena</title>
     <link rel="icon" type="image/png" href="main.png">
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="audio/main.wav" as="fetch" crossorigin>
+    <link rel="preload" href="style.css" as="style">
+    
+    <!-- Resource hints -->
+    <meta name="theme-color" content="#00ff00">
+    <meta name="description" content="Voxel Arena - Browser-based 3D FPS">
 </head>
 <body>
     <canvas id="game-canvas"></canvas>
@@ -178,16 +186,16 @@
                     </div>
                 </div>
                 
-                <div class="settings-section">
-                    <h3>Accessibility</h3>
-                    <div id="accessibility-settings-container">
-                        <!-- Accessibility settings will be populated by JavaScript -->
+                <!-- New row with Accessibility and Keybinds side by side -->
+                <div class="settings-main-grid accessibility-keybinds-row">
+                    <div class="settings-section accessibility-section">
+                        <h3>Accessibility</h3>
+                        <div id="accessibility-settings-container">
+                            <!-- Accessibility settings will be populated by JavaScript -->
+                        </div>
                     </div>
-                </div>
-            </div>
-            
-            <!-- Keybinds Section - Full Width -->
-            <div class="settings-section keybinds-section">
+                    
+                    <div class="settings-section keybinds-section">
                 <h3>Keybinds</h3>
                 <p class="instruction-text">Click a button to rebind</p>
                 
@@ -258,6 +266,7 @@
                         </div>
                     </div>
                 </div>
+                </div>
             </div>
             <div id="settings-message" class="message"></div>
             <div class="settings-actions">
@@ -282,9 +291,10 @@
             <div id="crosshair">+</div>
         </div>
 
-        <!-- Custom Cursor -->
-        <div id="custom-cursor"></div>
     </div>
+
+    <!-- Custom Cursor -->
+    <div id="custom-cursor"></div>
 
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>

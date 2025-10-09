@@ -18,6 +18,11 @@ body {
     cursor: none; /* Hide default cursor */
 }
 
+/* Ensure all input elements hide the default cursor */
+input, select, textarea {
+    cursor: none !important;
+}
+
 #game-canvas {
     display: block;
     width: 100vw !important;
@@ -154,6 +159,7 @@ body {
     opacity: 0.7;
     transition: opacity 0.2s;
     border-radius: 5px;
+    cursor: none !important;
 }
 
 .settings-section input[type="range"]::-webkit-slider-thumb {
@@ -164,7 +170,7 @@ body {
     background: #fff;
     border: 2px solid #00ff00;
     border-radius: 50%;
-    cursor: pointer;
+    cursor: none !important;
 }
 
 #keybinds-container {
@@ -618,12 +624,60 @@ body {
         max-width: 1300px;
         width: 96%;
     }
+    
+    /* Avatar menu responsive */
+    #avatar-menu {
+        max-width: 450px !important;
+        min-width: 350px;
+    }
+    
+    /* Main menu responsive */
+    #start-menu {
+        max-width: 350px !important;
+        min-width: 300px;
+    }
+    
+    /* Settings menu responsive */
+    #settings-menu {
+        max-width: 900px !important;
+        min-width: 700px;
+    }
+    
+    /* Map selection responsive */
+    #map-selection-menu {
+        max-width: 1000px !important;
+        min-width: 800px;
+    }
 }
 
 @media (max-width: 1200px) {
     .menu {
         max-width: 1100px;
         width: 95%;
+    }
+    
+    /* Avatar menu responsive */
+    #avatar-menu {
+        max-width: 400px !important;
+        min-width: 300px;
+    }
+    
+    /* Main menu responsive */
+    #start-menu {
+        max-width: 320px !important;
+        min-width: 280px;
+    }
+    
+    /* Settings menu responsive */
+    #settings-menu {
+        max-width: 800px !important;
+        min-width: 600px;
+    }
+    
+    /* Map selection responsive */
+    #map-selection-menu {
+        max-width: 900px !important;
+        min-width: 700px;
     }
 }
 
@@ -817,6 +871,7 @@ body {
     flex: 1;
     min-width: 120px;
     transition: all 0.3s ease;
+    cursor: none !important;
 }
 
 .setting-item select:hover {
@@ -840,16 +895,21 @@ body {
     border: 1px solid #00ff00;
     border-radius: 3px;
     background: none;
+    cursor: none !important;
 }
 
 /* Keybinds section styling */
 .keybinds-section {
-    grid-column: 1 / -1;
     margin-top: 6px;
     width: 100%;
     box-sizing: border-box;
     overflow-x: hidden;
     padding: 8px;
+}
+
+/* Override for accessibility-keybinds row */
+.accessibility-keybinds-row .keybinds-section {
+    grid-column: auto; /* Allow normal grid positioning */
 }
 
 .keybinds-grid {
@@ -973,6 +1033,27 @@ body {
     box-sizing: border-box;
 }
 
+/* Specific layout for accessibility + keybinds row */
+.settings-main-grid.accessibility-keybinds-row {
+    grid-template-columns: 0.8fr 2.2fr; /* Accessibility takes less space, Keybinds takes more */
+}
+
+/* Compact accessibility section */
+.accessibility-section {
+    min-width: 250px;
+    max-width: 350px;
+}
+
+.accessibility-section .setting-item {
+    margin-bottom: 8px;
+    padding: 6px 10px;
+}
+
+.accessibility-section .setting-item label {
+    min-width: 100px;
+    font-size: 13px;
+}
+
 .settings-main-grid .settings-section {
     margin-bottom: 0;
 }
@@ -1078,10 +1159,401 @@ body {
     border: 2px solid #00ff00 !important;
     border-radius: 50% !important;
     pointer-events: none !important;
-    z-index: 99999 !important;
+    z-index: 999999 !important;
     display: none; /* Hidden by default */
     transform: translate(-50%, -50%) !important;
     box-shadow: 0 0 10px rgba(0, 255, 0, 0.5) !important;
+}
+
+/* Custom Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(0, 255, 0, 0.3);
+    border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #00ff00 0%, #00cc00 100%);
+    border: 1px solid rgba(0, 255, 0, 0.5);
+    border-radius: 6px;
+    box-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #00ff00 0%, #00aa00 100%);
+    box-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
+}
+
+::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(180deg, #00cc00 0%, #008800 100%);
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.7);
+}
+
+::-webkit-scrollbar-corner {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+/* Firefox scrollbar styling */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #00ff00 rgba(0, 0, 0, 0.8);
+}
+
+/* Avatar Menu Specific Styling */
+#avatar-menu {
+    max-width: 500px !important;
+    width: auto !important;
+    min-width: 400px;
+    padding: 30px !important;
+}
+
+#avatar-display {
+    width: 200px;
+    height: 250px;
+    margin: 20px auto;
+    border: 2px solid #00ff00;
+    border-radius: 8px;
+    background: #222;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Main Menu Specific Styling */
+#start-menu {
+    max-width: 400px !important;
+    width: auto !important;
+    min-width: 350px;
+    padding: 40px !important;
+}
+
+#start-menu h1 {
+    font-size: 32px !important;
+    margin-bottom: 40px !important;
+}
+
+#start-menu button {
+    width: 200px;
+    margin: 15px 0 !important;
+    padding: 15px 25px !important;
+    font-size: 16px !important;
+}
+
+/* Settings Menu Specific Styling */
+#settings-menu {
+    max-width: 1000px !important;
+    width: auto !important;
+    min-width: 800px;
+    padding: 30px !important;
+}
+
+/* Map Selection Menu Specific Styling */
+#map-selection-menu {
+    max-width: 1200px !important;
+    width: auto !important;
+    min-width: 1000px;
+    padding: 30px !important;
+}
+
+/* Pause Menu Specific Styling */
+#pause-menu {
+    max-width: 400px !important;
+    width: auto !important;
+    min-width: 350px;
+    padding: 40px !important;
+}
+
+#pause-menu button {
+    width: 200px;
+    margin: 15px 0 !important;
+    padding: 15px 25px !important;
+    font-size: 16px !important;
+}
+
+/* Avatar Editor Controls */
+.avatar-controls {
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(0, 255, 0, 0.1);
+    border: 1px solid #00ff00;
+    border-radius: 8px;
+    max-width: 300px;
+}
+
+.avatar-item-section {
+    margin-bottom: 20px;
+}
+
+.avatar-item-section h3 {
+    color: #00ff00;
+    margin-bottom: 10px;
+    font-size: 16px;
+    text-align: center;
+}
+
+.avatar-item-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.avatar-toggle-btn {
+    background: linear-gradient(45deg, #00ff00, #00cc00);
+    color: #000;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    cursor: none !important;
+}
+
+.avatar-toggle-btn:hover {
+    background: linear-gradient(45deg, #00cc00, #009900);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 255, 0, 0.3);
+}
+
+.avatar-styling-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    border: 1px solid #00ff00;
+}
+
+.avatar-styling-controls label {
+    color: #00ff00;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.avatar-styling-controls input[type="color"] {
+    width: 100%;
+    height: 30px;
+    border: 1px solid #00ff00;
+    border-radius: 4px;
+    background: #000;
+    cursor: none !important;
+}
+
+.avatar-styling-controls input[type="range"] {
+    width: 100%;
+    height: 20px;
+    background: #000;
+    border: 1px solid #00ff00;
+    border-radius: 4px;
+    cursor: none !important;
+}
+
+.avatar-styling-controls input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #00ff00;
+    border-radius: 50%;
+    cursor: none !important;
+}
+
+.avatar-styling-controls input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: #00ff00;
+    border-radius: 50%;
+    border: none;
+    cursor: none !important;
+}
+
+/* Custom Dropdown Styles */
+.custom-dropdown {
+    position: relative;
+    display: inline-block;
+    min-width: 150px;
+}
+
+.custom-dropdown-button {
+    background: linear-gradient(135deg, rgba(0, 255, 0, 0.1), rgba(0, 255, 0, 0.05));
+    border: 2px solid #00ff00;
+    color: #00ff00;
+    padding: 8px 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: none !important;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    text-shadow: 0 0 4px rgba(0, 255, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 255, 0, 0.2);
+}
+
+.custom-dropdown-button:hover {
+    background: linear-gradient(135deg, rgba(0, 255, 0, 0.2), rgba(0, 255, 0, 0.1));
+    border-color: #00cc00;
+    box-shadow: 0 4px 12px rgba(0, 255, 0, 0.3);
+}
+
+.custom-dropdown-button.open {
+    background: linear-gradient(135deg, rgba(0, 255, 0, 0.25), rgba(0, 255, 0, 0.15));
+    border-color: #00cc00;
+    box-shadow: 0 6px 18px rgba(0, 255, 0, 0.4);
+}
+
+.dropdown-text {
+    flex: 1;
+    text-align: left;
+}
+
+.dropdown-arrow {
+    margin-left: 8px;
+    transition: transform 0.3s ease;
+    font-size: 12px;
+}
+
+.custom-dropdown-button.open .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.custom-dropdown-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.95);
+    border: 2px solid #00ff00;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 255, 0, 0.3);
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.custom-dropdown-option {
+    background: transparent;
+    border: none;
+    color: #cccccc;
+    padding: 8px 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    cursor: none !important;
+    transition: all 0.3s ease;
+    width: 100%;
+    text-align: left;
+    border-bottom: 1px solid rgba(0, 255, 0, 0.1);
+}
+
+.custom-dropdown-option:last-child {
+    border-bottom: none;
+}
+
+.custom-dropdown-option:hover {
+    background: rgba(0, 255, 0, 0.1);
+    color: #00ff00;
+}
+
+.custom-dropdown-option.selected {
+    background: rgba(0, 255, 0, 0.2);
+    color: #00ff00;
+    font-weight: bold;
+}
+
+/* Custom Slider Styles */
+.custom-slider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-width: 200px;
+}
+
+.custom-slider-track {
+    position: relative;
+    flex: 1;
+    height: 8px;
+    background: rgba(0, 255, 0, 0.2);
+    border-radius: 4px;
+    cursor: none !important;
+    border: 1px solid rgba(0, 255, 0, 0.3);
+}
+
+.custom-slider-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, #00ff00, #00cc00);
+    border-radius: 4px;
+    transition: width 0.1s ease;
+    box-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
+}
+
+.custom-slider-thumb {
+    position: absolute;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border: 2px solid #00ff00;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    cursor: none !important;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 255, 0, 0.5);
+}
+
+.custom-slider-thumb:hover {
+    background: #f0f0f0;
+    border-color: #00cc00;
+    box-shadow: 0 4px 12px rgba(0, 255, 0, 0.7);
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.custom-slider-value {
+    color: #00ff00;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    font-weight: bold;
+    min-width: 60px;
+    text-align: center;
+    text-shadow: 0 0 4px rgba(0, 255, 0, 0.3);
+}
+
+.custom-slider:focus-within .custom-slider-thumb {
+    box-shadow: 0 0 0 3px rgba(0, 255, 0, 0.3);
+}
+
+/* Make custom components focusable and accessible */
+.custom-dropdown-button:focus,
+.custom-slider:focus {
+    outline: 2px solid #00ff00;
+    outline-offset: 2px;
+}
+
+/* Container styles for custom components in settings */
+.slider-container,
+.dropdown-container {
+    flex: 1;
+    min-width: 0;
+}
+
+.slider-container {
+    margin: 0 5px;
+}
+
+.dropdown-container {
+    margin: 0 5px;
 }
 
 #avatar-display {

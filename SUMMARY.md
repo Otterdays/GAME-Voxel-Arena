@@ -4,7 +4,7 @@
 Voxel Arena is a browser-based 3D first-person shooter game built with HTML5, CSS3, and JavaScript using the Three.js library. The game features a retro-futuristic aesthetic with green-on-black UI styling and provides a complete single-player FPS experience.
 
 ## Current Status
-**Version**: 0.1.2 (Stable Release)
+**Version**: 0.34 (Stable Release)
 **Last Updated**: December 2024
 **Platform**: Web Browser (Cross-platform)
 **Status**: All critical bugs fixed, fully functional
@@ -43,6 +43,7 @@ Voxel Arena is a browser-based 3D first-person shooter game built with HTML5, CS
   - Settings Menu with audio, video, and keybind controls
   - Pause Menu with resume and quit options
 - **Custom Cursor System**: Soft pause menu avoiding pointer lock issues
+- **Custom Scrollbar**: Green-themed scrollbar matching overall design aesthetic
 - **HUD**: Crosshair display during gameplay
 - **Settings Management**: Persistent storage using localStorage
 - **Quit Page**: A dedicated `home.html` page provides a clean exit experience.

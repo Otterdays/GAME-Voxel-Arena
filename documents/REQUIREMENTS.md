@@ -48,14 +48,19 @@
 ### Bot Configuration Limits
 - **Maximum Bots**: 16 concurrent bots (performance limit)
 - **Recommended Bots**: 4-8 bots for optimal gameplay experience
-- **Team Balance**: Automatic red/blue team distribution
+- **Team Balance**: Custom red/blue team distribution (0-8 bots per team)
 - **Difficulty Levels**: Easy, Medium, Hard, Expert (affects AI parameters)
+- **Team Selection**: Player can choose Red or Blue team
 
 ### AI System Requirements
 - **JavaScript Performance**: Modern JavaScript engine required
 - **Memory Management**: Efficient garbage collection for bot lifecycle
 - **Physics Calculations**: WebGL-accelerated collision detection
 - **Real-time Processing**: Low-latency AI decision making
+- **BotBrain System**: Multi-module AI with decision trees and pathfinding
+- **Combat AI**: Tactical positioning, target prioritization, and weapon handling
+- **Movement AI**: A* pathfinding, obstacle avoidance, and formation movement
+- **Team Coordination**: Bot-to-bot communication and team tactics
 
 ## Development Requirements
 
@@ -77,6 +82,9 @@
 - **Audio**: Web Audio API support
 - **Storage**: localStorage for settings persistence
 - **Rendering**: WebGL context creation
+- **Custom UI Components**: CustomDropdown and CustomSlider components
+- **Custom Cursor System**: In-game cursor for menu navigation
+- **Custom Scrollbar Styling**: Themed scrollbars matching game aesthetic
 
 ### Performance Requirements
 - **Frame Rate**: 60fps target on recommended hardware

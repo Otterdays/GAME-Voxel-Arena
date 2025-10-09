@@ -1,11 +1,11 @@
 # 🎮 Voxel Arena
 <div align="center">
 
-![Voxel Arena Screenshot](main.png)
+![Voxel Arena Epic Battle](Gemini_Generated_Image_207tv0207tv0207t.png)
 
-**A smooth, browser-based 3D shooter that just works.**
+**An intense, browser-based 3D arena shooter with advanced AI combat.**
 
-[![Version](https://img.shields.io/badge/version-0.32-brightgreen.svg)](https://github.com/AfyKirby1/Voxel-Arena)
+[![Version](https://img.shields.io/badge/version-0.34-brightgreen.svg)](https://github.com/AfyKirby1/Voxel-Arena)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![JavaScript](https://img.shields.io/badge/language-JavaScript-yellow.svg)](https://javascript.info/)
 [![Three.js](https://img.shields.io/badge/engine-Three.js-orange.svg)](https://threejs.org/)
@@ -14,9 +14,9 @@
 
 ---
 
-## ✨ **Jump into fast-paced arena combat without downloads, installations, or complex setup.**
+## ⚔️ **Experience intense voxel-based warfare with cutting-edge AI opponents**
 
-Built with vanilla JavaScript and Three.js, Voxel Arena delivers **60fps gameplay** directly in your browser. No build tools, no dependencies, no hassle.
+Dive into epic battles where **Red vs Blue teams** clash in destructible arenas. Our advanced AI system creates intelligent, tactical opponents that patrol, flank, and engage with realistic combat behaviors. Built with vanilla JavaScript and Three.js for **smooth 60fps performance** - no downloads, no setup, just pure action.
 
 <div align="center">
 
@@ -58,22 +58,22 @@ python -m http.server 8000
 
 ---
 
-## 🤖 **Advanced AI Bot System** *(Fully Functional)*
+## 🤖 **Revolutionary AI Combat System** *(Battle-Tested)*
 
 <div align="center">
 
-### 🧠 **Smart Opponents**
-- **Multi-Module AI** - BotBrain with decision trees and pathfinding
-- **Tactical Combat** - Bots patrol, hunt, flank, retreat, and engage
-- **Team Combat** - Red vs Blue bot teams with proper coordination
-- **Realistic Physics** - Same physics system as player (gravity, collision, movement)
-- **Competitive Speeds** - Balanced speeds (5.0 units/second for medium difficulty)
+### 🧠 **Intelligent Warfare**
+- **🧠 Advanced BotBrain** - Multi-module AI with decision trees, pathfinding, and tactical awareness
+- **⚔️ Dynamic Combat** - Bots patrol, hunt, flank, retreat, and coordinate team attacks
+- **🔴🔵 Team Warfare** - Red vs Blue bot armies with sophisticated coordination and team tactics
+- **⚡ Realistic Physics** - Identical physics system to players (gravity, collision, movement)
+- **🎯 Balanced Difficulty** - Competitive speeds with 4 difficulty levels (Easy to Expert)
 
-### 🎨 **Team Management**
-- **Team Selection** - Choose Red or Blue team before starting
-- **Custom Bot Distribution** - Set different bot counts per team (0-8 each)
-- **Visual Team ID** - Player color changes based on selected team
-- **Enhanced Controls** - Intuitive +/- buttons for bot management
+### 🎨 **Strategic Team Management**
+- **🎮 Team Selection** - Choose your allegiance: Red or Blue forces
+- **⚙️ Custom Deployment** - Deploy 0-8 bots per team for asymmetric warfare
+- **🎨 Visual Identity** - Player appearance changes based on team selection
+- **🎛️ Tactical Controls** - Intuitive +/- deployment system with real-time feedback
 
 </div>
 
@@ -117,18 +117,19 @@ python -m http.server 8000
 
 ---
 
-## 🚀 **What's Next**
+## 🚀 **Battle Roadmap**
 
 <div align="center">
 
-This is **Phase 1** - a solid single-player foundation. Coming in **Phase 2**:
+This is **Phase 1** - a complete single-player warfare experience. **Phase 2** brings the ultimate multiplayer combat:
 
-| 🎯 Feature | 📋 Description |
-|------------|----------------|
-| 🤖 **Enhanced AI** | More sophisticated bot behaviors |
-| 🌐 **Multiplayer** | Online battles with friends |
-| 🗺️ **More Maps** | Additional arena environments |
-| 🔫 **Weapon Variety** | Different guns and mechanics |
+| 🎯 Feature | 📋 Description | 🎮 Status |
+|------------|----------------|-----------|
+| 🤖 **Enhanced AI** | Advanced bot behaviors with machine learning | 🔄 Planned |
+| 🌐 **Multiplayer** | Real-time online battles with friends | 🔄 Planned |
+| 🗺️ **More Maps** | Desert, Urban, and Space arena environments | 🔄 Planned |
+| 🔫 **Weapon Arsenal** | Assault rifles, sniper rifles, explosives | 🔄 Planned |
+| 🏆 **Ranking System** | Competitive matchmaking and leaderboards | 🔄 Planned |
 
 </div>
 
@@ -194,38 +195,54 @@ Once the game is running:
 
 ---
 
-## 🆕 **Recent Updates**
+## 🆕 **Latest Battle Updates**
 
 <div align="center">
 
-### 🔥 **Version 0.32 - UI & Weapon System Fixes**
-- **Button Interaction Fix** - Resolved double-click issues with bot count and Start Map buttons
-- **Enhanced Error Handling** - Added comprehensive null checks for UI elements
-- **Weapon System Fix** - Fixed missing import causing gun firing crashes
-- **Improved Stability** - Eliminated crashes and improved overall game reliability
-- **Better User Experience** - Smooth, predictable UI interactions
+### 🔥 **Version 0.34 - UI Polish & Custom Components**
+- **🎯 Custom Cursor System** - Restored advanced cursor functionality for seamless menu navigation
+- **🎨 Custom Scrollbar Styling** - Green-themed scrollbars matching the tactical interface
+- **✨ Visual Consistency** - Cohesive styling across all menu systems and components
 
-### 🎨 **Version 0.31 - Team Selection & UI Redesign**
-- **Team Selection** - Choose Red or Blue team before starting
-- **Custom Bot Distribution** - Set different bot counts per team (0-8 each)
-- **Wider Layout** - Redesigned UI from 800px to 1500px for better space usage
-- **Perfect Centering** - Menu now perfectly centered on screen
-- **Professional Design** - Clean, modern interface with improved spacing
-- **Visual Team ID** - Player color changes based on selected team
-- **Enhanced Controls** - Intuitive +/- buttons for bot management
+### 🔧 **Version 0.33 - Settings System Overhaul**
+- **⚙️ Toggle Switch Fixes** - Corrected ON/OFF state display issues in settings menu
+- **🎛️ Visual Feedback** - Proper state highlighting for all toggle controls
+- **🔧 Settings Menu** - All controls now function correctly with accurate visual states
+
+### 🔧 **Version 0.32 - Combat System Stabilization**
+- **🎮 Button Interaction Fix** - Resolved double-click issues with deployment and map selection
+- **🛡️ Enhanced Error Handling** - Comprehensive null checks preventing crashes
+- **🔫 Weapon System Fix** - Eliminated gun firing crashes with proper import handling
+- **⚡ Improved Stability** - Rock-solid performance with smooth UI interactions
+
+### 🎨 **Version 0.31 - Tactical Interface Redesign**
+- **🔴🔵 Team Selection** - Choose your side in the Red vs Blue conflict
+- **⚙️ Custom Bot Deployment** - Deploy 0-8 bots per team for asymmetric warfare
+- **📐 Expanded Layout** - Redesigned from 800px to 1500px for optimal space usage
+- **🎯 Perfect Centering** - Mathematically precise screen centering
+- **🎨 Professional Design** - Clean, modern tactical interface
+- **🎨 Visual Team Identity** - Dynamic player appearance based on team allegiance
+- **🎛️ Enhanced Controls** - Intuitive +/- deployment system with real-time feedback
 
 </div>
 
 ---
 
-## 🤝 **Contributing**
+## 🤝 **Join the Battle**
 
 <div align="center">
 
-We welcome contributions! The codebase is designed to be:
-- **Easy to understand** - Clear module structure
-- **Easy to extend** - Add new maps, weapons, features
-- **Easy to debug** - Comprehensive logging and error handling
+### 🛠️ **For Developers**
+- **📚 Clear Architecture** - Modular design with 17+ focused components
+- **🔧 Easy Extension** - Add new maps, weapons, and AI behaviors
+- **🐛 Debug-Friendly** - Comprehensive logging and error handling
+- **🎯 Token Optimized** - Split components reduce AI development costs
+
+### 🌟 **Community Features**
+- **🎮 Open Source** - MIT licensed, free to modify and distribute
+- **📖 Comprehensive Docs** - Complete technical documentation
+- **🚀 Active Development** - Regular updates and improvements
+- **💬 Discord Community** - Join our development discussions
 
 </div>
 
@@ -255,12 +272,26 @@ We welcome contributions! The codebase is designed to be:
 
 <div align="center">
 
-## 🎯 **Ready to play?**
+## 🎯 **Ready for Battle?**
 
-Just open `index.html` in your browser and start shooting!
+### 🚀 **Deploy Now**
+```bash
+# Quick deployment
+git clone https://github.com/AfyKirby1/Voxel-Arena.git
+cd Voxel-Arena
+launch.bat  # Windows
+```
 
-*Currently optimized for Windows 11 systems*
+### 🎮 **Jump Into Combat**
+- **Single Player**: Battle against intelligent AI opponents
+- **Team Selection**: Choose Red or Blue forces
+- **Custom Deployment**: Deploy 0-16 bots for epic battles
+- **Tactical Combat**: Use cover, flanking, and team coordination
 
-**⭐ Star this repo if you enjoy it!**
+*Optimized for Windows 11 systems with cross-platform browser support*
+
+### 🌟 **Show Your Support**
+**⭐ Star this repo** if you enjoy the intense combat!  
+**🍴 Fork and contribute** to help expand the battlefield!
 
 </div>

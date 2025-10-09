@@ -3,7 +3,7 @@
 This document lists all the software dependencies of the Voxel Arena project.
 
 **Generated**: December 2024  
-**Project Version**: 0.07  
+**Project Version**: 0.34  
 **Total Dependencies**: 1 external library
 
 ## External Dependencies
@@ -102,6 +102,14 @@ This document lists all the software dependencies of the Voxel Arena project.
 - **Lines of Code**: ~662 lines
 - **Dependencies**: Bot.js, Three.js
 - **Features**: Bot spawning, performance optimization, lifecycle management
+
+### Custom Components System
+- **customComponents.js**: Custom UI components (CustomDropdown, CustomSlider)
+- **Lines of Code**: ~400 lines
+- **Dependencies**: None (vanilla JavaScript)
+- **Features**: Custom dropdown and slider components with game aesthetic
+- **CSS Integration**: Custom styles in style.css for visual consistency
+- **Accessibility**: Maintains keyboard navigation and screen reader support
 
 ## Development Dependencies
 

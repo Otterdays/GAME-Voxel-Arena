@@ -1,9 +1,10 @@
-import { initAvatarEditor } from './avatar.js';
+import { initAvatarEditor, destroyAvatarEditor } from './avatar.js';
 import { refreshKeybinds } from './input.js';
 import { getSetting, setSetting, getAllKeybinds, initTempSettings, applySettings, resetTempSettings, getTempSetting, getTempAllKeybinds, defaultSettings, performanceProfiles, applyPerformanceProfile, detectRecommendedProfile } from './settings.js';
 import { MapPreview } from './mapPreview.js';
 import { createArena1 } from './arena1.js';
 import { createArena2 } from './arena2.js';
+import { CustomDropdown, CustomSlider, createValueFormatter } from './customComponents.js';
 
 const ui = {
     container: document.getElementById('ui-container'),
@@ -127,6 +128,10 @@ function showMenu(menuId) {
             }
         } else {
             menu.classList.remove('active');
+            // Cleanup avatar editor when leaving avatar menu
+            if (menu.id === 'avatar-menu') {
+                destroyAvatarEditor();
+            }
         }
     });
     ui.hud.style.display = 'none';
@@ -351,7 +356,7 @@ function addToggleSetting(label, category, key) {
             offButton.classList.remove('active');
         } else {
             offButton.classList.add('active');
-            onButton.classList.add('active');
+            onButton.classList.remove('active');
         }
     };
     
@@ -384,46 +389,26 @@ function addSliderSetting(label, category, key, min, max, step, displayFormat = 
     const labelElement = document.createElement('span');
     labelElement.textContent = label;
     
-    const slider = document.createElement('input');
-    slider.type = 'range';
-    slider.min = min;
-    slider.max = max;
-    slider.step = step;
-    slider.value = getTempSetting(category, key);
+    const sliderContainer = document.createElement('div');
+    sliderContainer.classList.add('slider-container');
     
-    const valueSpan = document.createElement('span');
+    const formatValue = createValueFormatter(displayFormat);
+    const currentValue = getTempSetting(category, key);
     
-    // Format the display value based on the displayFormat parameter
-    function formatValue(value) {
-        const numValue = parseFloat(value);
-        if (isNaN(numValue)) return '0';
-        
-        switch (displayFormat) {
-            case 'percentage':
-                return Math.round(numValue * 100) + '%';
-            case 'integer':
-                return Math.round(numValue).toString();
-            case 'decimal':
-                return numValue.toFixed(2);
-            case 'fps':
-                return Math.round(numValue) + ' FPS';
-            case 'units':
-                return Math.round(numValue) + ' units';
-            default:
-                return Math.round(numValue * 100) + '%';
-        }
-    }
-    
-    valueSpan.textContent = formatValue(slider.value);
-    
-    slider.addEventListener('input', (e) => {
-        setSetting(category, key, parseFloat(e.target.value));
-        valueSpan.textContent = formatValue(e.target.value);
-    });
+    const customSlider = new CustomSlider(
+        sliderContainer,
+        min,
+        max,
+        step,
+        currentValue,
+        (value) => {
+            setSetting(category, key, value);
+        },
+        formatValue
+    );
     
     div.appendChild(labelElement);
-    div.appendChild(slider);
-    div.appendChild(valueSpan);
+    div.appendChild(sliderContainer);
     
     const container = getContainerForCategory(category);
     container.appendChild(div);
@@ -436,23 +421,22 @@ function addSelectSetting(label, category, key, options) {
     const labelElement = document.createElement('span');
     labelElement.textContent = label;
     
-    const select = document.createElement('select');
-    options.forEach(option => {
-        const optionElement = document.createElement('option');
-        optionElement.value = option.value;
-        optionElement.textContent = option.text;
-        if (option.value === getTempSetting(category, key)) {
-            optionElement.selected = true;
-        }
-        select.appendChild(optionElement);
-    });
+    const dropdownContainer = document.createElement('div');
+    dropdownContainer.classList.add('dropdown-container');
     
-    select.addEventListener('change', (e) => {
-        setSetting(category, key, e.target.value);
-    });
+    const currentValue = getTempSetting(category, key);
+    
+    const customDropdown = new CustomDropdown(
+        dropdownContainer,
+        options,
+        currentValue,
+        (value) => {
+            setSetting(category, key, value);
+        }
+    );
     
     div.appendChild(labelElement);
-    div.appendChild(select);
+    div.appendChild(dropdownContainer);
     
     const container = getContainerForCategory(category);
     container.appendChild(div);
