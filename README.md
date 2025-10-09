@@ -1,14 +1,22 @@
 # 🎮 Voxel Arena
 <div align="center">
 
-![Voxel Arena Epic Battle](Gemini_Generated_Image_207tv0207tv0207t.png)
+![Voxel Arena Screenshot](main.png)
 
 **An intense, browser-based 3D arena shooter with advanced AI combat.**
 
-[![Version](https://img.shields.io/badge/version-0.34-brightgreen.svg)](https://github.com/AfyKirby1/Voxel-Arena)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![JavaScript](https://img.shields.io/badge/language-JavaScript-yellow.svg)](https://javascript.info/)
-[![Three.js](https://img.shields.io/badge/engine-Three.js-orange.svg)](https://threejs.org/)
+</div>
+
+## 🛠️ **Tech Stack**
+
+<div align="center">
+
+[![Version](https://img.shields.io/badge/version-0.34-brightgreen.svg?style=for-the-badge&logo=github)](https://github.com/AfyKirby1/Voxel-Arena)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge&logo=opensourceinitiative)](LICENSE)
+[![JavaScript](https://img.shields.io/badge/language-JavaScript-yellow.svg?style=for-the-badge&logo=javascript)](https://javascript.info/)
+[![Three.js](https://img.shields.io/badge/engine-Three.js-orange.svg?style=for-the-badge&logo=threedotjs)](https://threejs.org/)
+[![WebGL](https://img.shields.io/badge/WebGL-2.0-red.svg?style=for-the-badge&logo=webgl)](https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API)
+[![Browser](https://img.shields.io/badge/browser-compatible-green.svg?style=for-the-badge&logo=googlechrome)](https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API)
 
 </div>
 
@@ -293,5 +301,26 @@ launch.bat  # Windows
 ### 🌟 **Show Your Support**
 **⭐ Star this repo** if you enjoy the intense combat!  
 **🍴 Fork and contribute** to help expand the battlefield!
+
+</div>
+
+---
+
+## 🎨 **Concept Art**
+
+<div align="center">
+
+### 🎮 **Epic Battle Scene**
+
+![Voxel Arena Epic Battle Concept](Gemini_Generated_Image_207tv0207tv0207t.png)
+
+*Generated concept art showcasing the intense Red vs Blue team warfare in our voxel-based arena environments*
+
+**Features depicted:**
+- 🔴🔵 **Team-based combat** with Red and Blue forces
+- ⚔️ **Advanced AI opponents** engaging in tactical warfare
+- 🏛️ **Ancient arena architecture** with strategic cover
+- 💥 **Dynamic combat effects** with laser fire and explosions
+- 🎯 **Tactical positioning** and team coordination
 
 </div>
