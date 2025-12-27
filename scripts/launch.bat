@@ -1,44 +1,44 @@
 @echo off
+title Voxel Arena Launcher
+color 0A
+
 echo.
 echo ========================================
-echo    Voxel-Arena Game Launcher
+echo    Voxel Arena - Game Launcher
 echo ========================================
-echo.
-echo Starting local web server...
-echo.
-echo The game will open in your default browser
-echo at: http://localhost:8000
-echo.
-echo Press Ctrl+C to stop the server
 echo.
 
-REM Change to game directory
 cd /d "%~dp0..\game"
 
-REM Check if Python is available
+REM Try Python first
 python --version >nul 2>&1
 if %errorlevel% equ 0 (
-    echo Using Python HTTP server...
+    echo Starting server on http://localhost:8000
+    echo Press Ctrl+C to stop
+    echo.
+    start http://localhost:8000
     python -m http.server 8000
-) else (
-    REM Fallback to Node.js if Python is not available
-    node --version >nul 2>&1
-    if %errorlevel% equ 0 (
-        echo Python not found, using Node.js HTTP server...
-        npx http-server -p 8000
-    ) else (
-        echo.
-        echo ERROR: Neither Python nor Node.js found!
-        echo.
-        echo Please install one of the following:
-        echo 1. Python 3.x (recommended)
-        echo 2. Node.js with npx
-        echo.
-        echo Or simply open game/index.html directly in your browser.
-        echo.
-        pause
-        exit /b 1
-    )
+    goto :end
 )
 
+REM Fallback to Node.js
+node --version >nul 2>&1
+if %errorlevel% equ 0 (
+    echo Starting server on http://localhost:8000
+    echo Press Ctrl+C to stop
+    echo.
+    start http://localhost:8000
+    npx http-server -p 8000
+    goto :end
+)
+
+REM No server found
+echo ERROR: Python or Node.js required!
+echo.
+echo Install Python 3.x or Node.js, or open game/index.html directly.
+echo.
+pause
+exit /b 1
+
+:end
 pause

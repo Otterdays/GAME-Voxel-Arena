@@ -57,25 +57,35 @@ export class BotSenses {
      * Main update loop
      */
     update(deltaTime) {
-        const currentTime = Date.now();
-        
-        // Update vision at specified intervals
-        if (currentTime - this.lastVisionUpdate > this.visionUpdateInterval * 1000) {
-            this.updateVision();
-            this.lastVisionUpdate = currentTime;
+        try {
+            const currentTime = Date.now();
+
+            // Update vision at specified intervals
+            if (currentTime - this.lastVisionUpdate > this.visionUpdateInterval * 1000) {
+                this.updateVision();
+                this.lastVisionUpdate = currentTime;
+            }
+
+            // Update hearing continuously
+            this.updateHearing(deltaTime);
+
+            // Update environmental awareness
+            this.updateEnvironmentalAwareness(deltaTime);
+
+            // Decay old observations
+            this.decayObservations(deltaTime);
+
+            // Update threat assessment
+            this.updateThreatAssessment();
+        } catch (error) {
+            console.error(`Bot ${this.bot.id} senses error:`, error);
+            // Reset senses to recover
+            this.visibleTargets.clear();
+            this.audibleTargets.clear();
+            this.threats.clear();
+            this.allies.clear();
+            this.enemies.clear();
         }
-        
-        // Update hearing continuously
-        this.updateHearing(deltaTime);
-        
-        // Update environmental awareness
-        this.updateEnvironmentalAwareness(deltaTime);
-        
-        // Decay old observations
-        this.decayObservations(deltaTime);
-        
-        // Update threat assessment
-        this.updateThreatAssessment();
     }
     
     /**

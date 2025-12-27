@@ -56,6 +56,8 @@ export class Minimap {
         // Draw bots
         if (bots) {
             bots.forEach(bot => {
+                if (!bot.isAlive) return; // Skip dead bots
+
                 const relX = bot.position.x - player.mesh.position.x;
                 const relZ = bot.position.z - player.mesh.position.z;
 

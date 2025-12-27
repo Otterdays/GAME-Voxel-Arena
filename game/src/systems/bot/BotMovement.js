@@ -122,28 +122,45 @@ export class BotMovement {
      * Update movement system
      */
     updateMovement(deltaTime) {
-        // Calculate desired velocity based on current target
-        if (this.currentTarget) {
-            const direction = this.currentTarget.clone().sub(this.bot.position).normalize();
-            this.desiredVelocity = direction.multiplyScalar(this.maxSpeed);
-        } else {
-            this.desiredVelocity.set(0, 0, 0);
+        try {
+            // Calculate desired velocity based on current target
+            if (this.currentTarget) {
+                if (window.DEBUG_BOT_MOVEMENT) {
+                    console.debug(`Bot ${this.bot.id} moving to target:`, this.currentTarget);
+                }
+
+                const direction = this.currentTarget.clone().sub(this.bot.position);
+                direction.y = 0; // Force horizontal movement only
+                direction.normalize();
+                this.desiredVelocity = direction.multiplyScalar(this.maxSpeed);
+            } else {
+                this.desiredVelocity.set(0, 0, 0);
+            }
+
+            // Apply steering forces
+            this.calculateSteeringForce();
+
+            // Update velocity
+            this.velocity.add(this.steeringForce.clone().multiplyScalar(deltaTime));
+            this.velocity.y = 0; // Ensure velocity remains strictly horizontal
+
+            // Limit velocity
+            if (this.velocity.length() > this.maxSpeed) {
+                this.velocity.normalize().multiplyScalar(this.maxSpeed);
+            }
+
+            // Apply friction (much less aggressive)
+            this.velocity.multiplyScalar(0.98);
+
+            // Safety check for NaN values
+            if (isNaN(this.velocity.x) || isNaN(this.velocity.z)) {
+                this.velocity.set(0, 0, 0);
+                console.warn(`Bot ${this.bot.id} velocity became NaN, resetting`);
+            }
+        } catch (error) {
+            console.error(`Bot ${this.bot.id} movement error:`, error);
+            this.velocity.set(0, 0, 0);
         }
-        
-        
-        // Apply steering forces
-        this.calculateSteeringForce();
-        
-        // Update velocity
-        this.velocity.add(this.steeringForce.clone().multiplyScalar(deltaTime));
-        
-        // Limit velocity
-        if (this.velocity.length() > this.maxSpeed) {
-            this.velocity.normalize().multiplyScalar(this.maxSpeed);
-        }
-        
-        // Apply friction (much less aggressive)
-        this.velocity.multiplyScalar(0.98);
     }
     
     /**
@@ -482,7 +499,8 @@ export class BotMovement {
     initializePathfindingGrid() {
         // This would integrate with the game's arena system
         // For now, create a simple grid
-        const gridSize = 100;
+        const gridSize = 200; // Increased to cover negative coordinates
+        this.gridOffset = 100; // Center offset
         this.pathfindingGrid = new Array(gridSize);
         
         for (let x = 0; x < gridSize; x++) {
@@ -550,9 +568,10 @@ export class BotMovement {
      * Convert world position to grid coordinates
      */
     worldToGrid(worldPos) {
+        const offset = this.gridOffset || 100;
         return {
-            x: Math.floor(worldPos.x / this.gridResolution),
-            z: Math.floor(worldPos.z / this.gridResolution)
+            x: Math.floor(worldPos.x / this.gridResolution) + offset,
+            z: Math.floor(worldPos.z / this.gridResolution) + offset
         };
     }
     
@@ -560,10 +579,11 @@ export class BotMovement {
      * Convert grid coordinates to world position
      */
     gridToWorld(gridPos) {
+        const offset = this.gridOffset || 100;
         return new THREE.Vector3(
-            gridPos.x * this.gridResolution,
+            (gridPos.x - offset) * this.gridResolution,
             0,
-            gridPos.z * this.gridResolution
+            (gridPos.z - offset) * this.gridResolution
         );
     }
     
@@ -919,8 +939,34 @@ export class BotMovement {
      */
     findPatrolPoint() {
         // Generate random position within arena bounds (assuming 100x100 arena)
+        // Use more strategic patrol points based on game situation
         const x = (Math.random() - 0.5) * 80; // Keep within bounds
         const z = (Math.random() - 0.5) * 80;
+
+        // Add some tactical variation based on bot personality
+        const personality = this.bot.personality;
+        if (personality) {
+            // More aggressive bots patrol closer to center
+            const aggression = personality.getEffectiveAggression();
+            const centerBias = aggression * 0.3;
+
+            // More cautious bots patrol closer to edges
+            const caution = personality.getEffectiveCaution();
+            const edgeBias = caution * 0.2;
+
+            // Apply biases to patrol position
+            const centerX = x * (1 - centerBias);
+            const centerZ = z * (1 - centerBias);
+            const edgeX = x * (1 + edgeBias);
+            const edgeZ = z * (1 + edgeBias);
+
+            // Combine biases based on personality
+            const finalX = centerX * (1 - edgeBias) + edgeX * edgeBias;
+            const finalZ = centerZ * (1 - edgeBias) + edgeZ * edgeBias;
+
+            return new THREE.Vector3(finalX, 0, finalZ);
+        }
+
         return new THREE.Vector3(x, 0, z);
     }
     

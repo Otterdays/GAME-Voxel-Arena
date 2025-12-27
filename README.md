@@ -11,7 +11,7 @@
 
 <div align="center">
 
-[![Version](https://img.shields.io/badge/version-0.34-brightgreen.svg?style=for-the-badge&logo=github)](https://github.com/AfyKirby1/Voxel-Arena)
+[![Version](https://img.shields.io/badge/version-0.37-brightgreen.svg?style=for-the-badge&logo=github)](https://github.com/AfyKirby1/Voxel-Arena)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge&logo=opensourceinitiative)](LICENSE)
 [![JavaScript](https://img.shields.io/badge/language-JavaScript-yellow.svg?style=for-the-badge&logo=javascript)](https://javascript.info/)
 [![Three.js](https://img.shields.io/badge/engine-Three.js-orange.svg?style=for-the-badge&logo=threedotjs)](https://threejs.org/)

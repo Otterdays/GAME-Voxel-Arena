@@ -56,20 +56,29 @@ export class BotBrain {
      * Main update loop - called every frame
      */
     update(deltaTime) {
-        // Update all subsystems
-        this.senses.update(deltaTime);
-        this.memory.update(deltaTime);
-        this.combat.update(deltaTime);
-        this.movement.update(deltaTime);
-        
-        // Make decisions at specified intervals
-        if (Date.now() - this.lastDecisionTime > this.decisionInterval * 1000) {
-            this.makeDecision();
-            this.lastDecisionTime = Date.now();
+        try {
+            // Update all subsystems
+            this.senses.update(deltaTime);
+            this.memory.update(deltaTime);
+            this.combat.update(deltaTime);
+            this.movement.update(deltaTime);
+
+            // Make decisions at specified intervals
+            if (Date.now() - this.lastDecisionTime > this.decisionInterval * 1000) {
+                this.makeDecision();
+                this.lastDecisionTime = Date.now();
+            }
+
+            // Update performance metrics
+            this.updatePerformanceMetrics(deltaTime);
+        } catch (error) {
+            console.error(`Bot ${this.bot.id} brain error:`, error);
+            // Reset brain systems to recover
+            this.senses = new BotSenses(this);
+            this.memory = new BotMemory(this);
+            this.combat = new BotCombat(this);
+            this.movement = new BotMovement(this);
         }
-        
-        // Update performance metrics
-        this.updatePerformanceMetrics(deltaTime);
     }
     
     /**

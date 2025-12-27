@@ -17,35 +17,64 @@ Voxel Arena is a browser-based 3D first-person shooter built with vanilla JavaSc
 - **Storage**: localStorage for settings persistence
 - **Build System**: None (vanilla JavaScript)
 
-### Modular Component System (17 Modules)
-1. **`main.js`** - Core game engine and main loop
-2. **`player.js`** - First-person player controls and physics
-3. **`glock.js`** - Weapon system with procedural audio
-4. **`bullet.js`** - Projectile physics and rendering
-5. **`arena.js`** - Arena dispatcher and map loading
-6. **`arena1.js`** / **`arena2.js`** - Individual map definitions
-7. **`ui.js`** - User interface management
-8. **`minimap.js`** - Renders the top-down minimap on the HUD
-9. **`input.js`** - Input handling and keybind system
-10. **`settings.js`** - Settings persistence and management
+### Modular Component System (19 Core Modules + Supporting Systems)
 
-### AI Bot System (7 Modules)
-11. **`bot/Bot.js`** - Main bot class with physics and AI integration
-12. **`bot/BotBrain.js`** - Core AI decision-making system
-13. **`bot/BotSenses.js`** - Perception and environmental awareness
-14. **`bot/BotMemory.js`** - Learning and experience storage
-15. **`bot/BotPersonality.js`** - Behavioral traits and emotional states
-16. **`bot/BotCombat.js`** - Tactical combat and weapon handling
-17. **`bot/BotMovement.js`** - Navigation and pathfinding
-18. **`bot/BotCommunication.js`** - Team coordination and information sharing
-19. **`bot/BotManager.js`** - Game integration and bot lifecycle management
+**📁 File Locations**: All paths relative to `Voxel-Arena/game/src/`
+
+#### Core Game Modules
+1. **`core/main.js`** - Core game engine and main loop (Game class, scene management)
+2. **`core/input.js`** - Input handling and keybind system (keyboard/mouse, custom cursor)
+3. **`core/settings.js`** - Settings persistence and management (localStorage)
+4. **`core/physics.js`** - Collision detection (AABB algorithm)
+
+#### Player Modules
+5. **`player/player.js`** - First-person player controls and physics (movement, camera)
+6. **`player/character.js`** - Procedural character model (cylinder + spheres)
+7. **`player/glock.js`** - Weapon system with procedural audio (firing, iron sights)
+8. **`player/bullet.js`** - Projectile physics and rendering (bullet class)
+9. **`player/avatar.js`** - Avatar editor (3D character viewer)
+
+#### World Modules
+10. **`world/arena.js`** - Arena dispatcher and map loading (loads arena1/arena2)
+11. **`world/arena1.js`** - Classic Arena definition (100x100 units)
+12. **`world/arena2.js`** - Big Arena definition (120x120 units)
+13. **`world/structures.js`** - Structure class (collision data representation)
+14. **`world/mapPreview.js`** - 3D map preview system (for map selection menu)
+
+#### UI Modules
+15. **`ui/ui.js`** - User interface management (menus, HUD, interactions)
+16. **`ui/minimap.js`** - Renders the top-down minimap on the HUD (dynamic creation)
+17. **`ui/customComponents.js`** - Custom UI components (CustomDropdown, CustomSlider)
+
+### AI Bot System (9 Modules)
+
+**📁 Location**: All bot modules in `game/src/systems/bot/`
+
+18. **`systems/bot/Bot.js`** - Main bot class with physics and AI integration (938 lines)
+19. **`systems/bot/BotBrain.js`** - Core AI decision-making system (state machines, decisions)
+20. **`systems/bot/BotSenses.js`** - Perception and environmental awareness (vision, hearing, 700 lines)
+21. **`systems/bot/BotMemory.js`** - Learning and experience storage (pattern recognition)
+22. **`systems/bot/BotPersonality.js`** - Behavioral traits and emotional states (affects decisions)
+23. **`systems/bot/BotCombat.js`** - Tactical combat and weapon handling (targeting, firing)
+24. **`systems/bot/BotMovement.js`** - Navigation and pathfinding (A* algorithm, 1029 lines)
+25. **`systems/bot/BotCommunication.js`** - Team coordination and information sharing
+26. **`systems/bot/BotManager.js`** - Game integration and bot lifecycle management (729 lines)
 
 ### Supporting Systems
-- **`physics.js`** - AABB collision detection
-- **`structures.js`** - World object data representation
-- **`character.js`** - Procedural player model
-- **`avatar.js`** - 3D character viewer
-- **`customComponents.js`** - Custom UI components (CustomDropdown, CustomSlider)
+
+**Note**: These are listed separately but are part of the core module count above. They're utility modules used by multiple systems.
+
+- **`core/physics.js`** - AABB collision detection (used by player.js and Bot.js)
+- **`world/structures.js`** - World object data representation (used by arena1.js, arena2.js)
+- **`player/character.js`** - Procedural player model (used by player.js and Bot.js)
+- **`player/avatar.js`** - 3D character viewer (used by main.js for avatar menu)
+- **`ui/customComponents.js`** - Custom UI components (used by ui.js for settings menu)
+- **`world/mapPreview.js`** - 3D map preview system (used by ui.js for map selection)
+
+**Total Modules**: 26 JavaScript modules (17 core game + 9 bot system)
+
+**📖 For complete file locations and import relationships, see [`FILE_MAP.md`](./FILE_MAP.md)**  
+**🤖 For comprehensive bot system analysis and pain points, see [`BOT_ANALYSIS.md`](./BOT_ANALYSIS.md)**
 
 ## 🎮 Current Features
 

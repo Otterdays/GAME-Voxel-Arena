@@ -2,9 +2,10 @@ const BULLET_SPEED = 100.0;
 const BULLET_LIFETIME = 2.0; // seconds
 
 export class Bullet {
-    constructor(scene, position, direction) {
+    constructor(scene, position, direction, owner = null) {
         this.scene = scene;
         this.lifetime = BULLET_LIFETIME;
+        this.owner = owner;
 
         const bulletGeometry = new THREE.SphereGeometry(0.05, 8, 8);
         const bulletMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00 });

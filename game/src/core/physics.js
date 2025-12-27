@@ -2,10 +2,10 @@
 
 export function checkCollision(player, structures) {
     // Use a tighter collision box for bots - just the body cylinder
-    // Bot body is a cylinder with radius 0.4 and height 1.0, positioned at y=1.0
+    // Bot body is a cylinder with radius 0.4 and height 1.8
     const botRadius = 0.4;
-    const botHeight = 1.0;
-    const botCenterY = 1.5; // Body center is at y=1.5 (above ground level)
+    const botHeight = 1.8;
+    const botCenterY = 0.9; // Center is at y=0.9 (half height) relative to feet
     
     const playerBox = new THREE.Box3().setFromCenterAndSize(
         new THREE.Vector3(

@@ -4,26 +4,507 @@
 
 Voxel Arena is a 3D FPS game built with HTML, CSS, and JavaScript. Three.js is used for 3D rendering, loaded globally via a `<script>` tag in `index.html`. The application runs entirely in the browser.
 
+**📁 File Locations**: All file paths are relative to the project root `Voxel-Arena/`. For complete file mapping, see [`FILE_MAP.md`](./FILE_MAP.md).
+
+**🎯 Entry Point**: `game/index.html` → loads `game/src/core/main.js` → initializes `Game` class
+
+## Module Overview
+
+**Total Modules**: 25 JavaScript modules organized into 5 categories:
+- **Core Systems**: 4 modules (main, physics, input, settings)
+- **Player Systems**: 5 modules (player, character, glock, bullet, avatar)
+- **World Systems**: 5 modules (arena, arena1, arena2, structures, mapPreview)
+- **UI Systems**: 3 modules (ui, minimap, customComponents)
+- **AI Bot Systems**: 9 modules (Bot, BotBrain, BotSenses, BotMemory, BotPersonality, BotCombat, BotMovement, BotCommunication, BotManager)
+
 ## Components
 
--   **`game/index.html`**: The main entry point of the application. It contains the canvas for the game, the HTML structure for the UI menus, and loads the global Three.js library.
--   **`game/style.css`**: Provides styling for all UI elements, including menus and the in-game HUD.
--   **`game/src/core/main.js`**: The core of the game. It initializes the Three.js scene (relying on the global `THREE` object), manages the main game loop, controls the overall game state, and manages the lifecycle of bullets.
--   **`game/src/world/arena.js`**: Acts as a dispatcher for arena creation. It imports specific arena definitions and, based on a `mapId`, calls the appropriate arena creation function.
--   **`game/src/world/arena1.js`**: Defines the first arena, including its geometry, materials, and obstacles (relying on the global `THREE` object).
--   **`game/src/world/arena2.js`**: Defines the second, larger, and more complex arena with varied obstacles and colors (relying on the global `THREE` object).
--   **`game/src/player/player.js`**: Handles player creation, movement, and first-person camera controls. It uses the character model from `game/src/player/character.js`. To prevent the camera from clipping into the player's own model, the model is assigned to a separate rendering layer, making it invisible to the main camera.
--   **`game/src/player/glock.js`**: Manages the player's weapon, including its model, iron sights, firing mechanism, and sound effects. It creates bullets when fired (relying on the global `THREE` object).
--   **`game/src/player/bullet.js`**: Defines the `Bullet` class, including its appearance (dark orange sphere), movement logic, and lifetime (relying on the global `THREE` object).
--   **`game/src/ui/ui.js`**: Controls the visibility and interaction of all UI components (start menu, settings, pause menu, HUD), including dynamic population of map selection buttons and custom toggle switches for settings.
--   **`game/src/ui/minimap.js`**: **Completely rebuilt minimap system (v0.21)** - Renders a top-down minimap on the HUD with dynamic element creation. Displays player position (green dot), direction indicator, structures (gray rectangles), and bots (red/blue dots by team). Features 4x zoom level, proper coordinate system, and self-contained DOM creation with no HTML dependencies.
--   **`game/src/core/input.js`**: Captures and processes all keyboard and mouse input, managed by a customizable keybinding system.
--   **`game/src/core/settings.js`**: Manages persistent game settings like audio volume and keybindings, potentially using browser `localStorage`.
--   **`game/src/world/structures.js`**: Defines the `Structure` class, a data representation for all world objects that can be collided with.
--   **`game/src/core/physics.js`**: Handles collision detection between the player and structures.
--   **`game/src/player/character.js`**: Defines the procedural "bean" character model, created by combining a `CylinderGeometry` and two `SphereGeometry` objects.
--   **`game/src/player/avatar.js`**: Handles the logic for the avatar editor, including creating a new Three.js scene and rendering the player model.
--   **`game/src/ui/customComponents.js`**: Custom UI components (CustomDropdown, CustomSlider) that match the game's aesthetic and work properly with the custom cursor system.
+### Core Systems (4 modules)
+
+#### `game/src/core/main.js` - Game Engine Hub
+**Full Path**: `Voxel-Arena/game/src/core/main.js`  
+**Purpose**: Central game engine, manages game loop, scene, and all systems  
+**Key Responsibilities**:
+- Initializes Three.js scene, camera, renderer
+- Manages game state (`menu`, `playing`, `paused`)
+- Runs main game loop at 60fps
+- Coordinates all systems (player, bots, UI, bullets)
+- Handles game lifecycle (start, pause, quit)
+
+**Imports From**:
+- `./input.js` → Input system
+- `./settings.js` → Settings management
+- `../world/arena.js` → Arena creation
+- `../player/player.js` → Player class
+- `../player/glock.js` → Weapon system
+- `../player/bullet.js` → Bullet class
+- `../ui/ui.js` → UI management
+- `../ui/minimap.js` → Minimap system
+- `../systems/bot/BotManager.js` → Bot system
+
+**Exports**: `Game` class (instantiated in `index.html`)
+
+**Key Methods**:
+- `init()` → Initialize game systems
+- `startGame(mapId)` → Start game with selected map
+- `pauseGame()` → Pause game, show pause menu
+- `resumeGame()` → Resume from pause
+- `animate()` → Main game loop (60fps)
+
+---
+
+#### `game/src/core/physics.js` - Collision Detection
+**Full Path**: `Voxel-Arena/game/src/core/physics.js`  
+**Purpose**: AABB collision detection between entities and structures  
+**Key Function**: `checkCollision(player, structures)` → Returns collision info  
+**Used By**: 
+- `player.js` (player collision)
+- `Bot.js` (bot collision)
+
+**Algorithm**: Axis-Aligned Bounding Box (AABB) intersection tests
+
+---
+
+#### `game/src/core/input.js` - Input System
+**Full Path**: `Voxel-Arena/game/src/core/input.js`  
+**Purpose**: Keyboard/mouse input, keybind management, custom cursor  
+**Key Responsibilities**:
+- Captures keyboard and mouse events
+- Manages customizable keybinds
+- Handles custom cursor for menu navigation
+- Provides input state to game systems
+
+**Imports From**: `./settings.js` (for keybind loading)
+
+**Exports**:
+- `initInput(callback)` → Initialize input system
+- `getInputState()` → Current input state object
+- `setCursorActive(bool)` → Enable/disable custom cursor
+- `refreshKeybinds()` → Reload keybinds from settings
+- `clearEscapeInput()` → Clear escape key state
+- `clearFireInput()` → Clear fire input state
+
+**Used By**: `main.js`, `player.js`, `glock.js`
+
+---
+
+#### `game/src/core/settings.js` - Settings Persistence
+**Full Path**: `Voxel-Arena/game/src/core/settings.js`  
+**Purpose**: Load/save settings to localStorage  
+**Key Responsibilities**:
+- Persist settings across sessions
+- Load default settings
+- Apply performance profiles
+- Manage temporary settings (apply/cancel)
+
+**Imports**: None (pure utility module)
+
+**Exports**:
+- `getSetting(key)` → Get setting value
+- `setSetting(key, value)` → Save setting
+- `applyPerformanceProfile()` → Apply performance settings
+
+**Used By**: `main.js`, `input.js`, `ui.js`
+
+**Storage**: Browser `localStorage` API
+
+### Player Systems (5 modules)
+
+#### `game/src/player/player.js` - Player Controller
+**Full Path**: `Voxel-Arena/game/src/player/player.js`  
+**Purpose**: First-person player movement, camera controls, physics  
+**Key Responsibilities**:
+- WASD movement with physics
+- Mouse look (pitch/yaw)
+- Jumping and gravity
+- Collision detection
+- Camera management
+
+**Imports From**:
+- `./character.js` → Character model creation
+- `../core/physics.js` → Collision detection
+- `../core/input.js` → Input state
+
+**Exports**: `Player` class  
+**Used By**: `main.js`
+
+**Key Methods**:
+- `update(deltaTime)` → Update position, handle input
+- `getPosition()` → Get current position {x, y, z}
+- `getDirection()` → Get facing direction (yaw angle)
+
+**Technical Details**:
+- Character model uses separate rendering layer to prevent camera clipping
+- Physics: gravity (20.0), jump force, friction
+- Movement speed: 5.0 units/second
+
+---
+
+#### `game/src/player/character.js` - Character Model
+**Full Path**: `Voxel-Arena/game/src/player/character.js`  
+**Purpose**: Procedural character model (cylinder + spheres = "bean" shape)  
+**Key Responsibilities**:
+- Create 3D character mesh
+- Support team-based colors (red/blue/green)
+- Proper component positioning (body, head, arms, legs)
+
+**Imports**: None (uses global `THREE`)
+
+**Exports**: `createCharacter(team)` → Returns Three.js Group with character mesh  
+**Used By**: 
+- `player.js` (player character)
+- `Bot.js` (bot characters)
+- `avatar.js` (avatar viewer)
+
+**Model Structure**:
+- Body: CylinderGeometry (y=0.0)
+- Head: SphereGeometry (y=1.2)
+- Arms: Two CylinderGeometry (y=0.8)
+- Legs: Two CylinderGeometry (y=-0.5)
+
+---
+
+#### `game/src/player/glock.js` - Weapon System
+**Full Path**: `Voxel-Arena/game/src/player/glock.js`  
+**Purpose**: Weapon model, firing, procedural audio  
+**Key Responsibilities**:
+- 3D weapon model attached to camera
+- Iron sights rendering
+- Fire rate limiting
+- Procedural gunshot audio (Web Audio API)
+- Bullet creation
+
+**Imports From**:
+- `./bullet.js` → Create bullets when firing
+- `../core/input.js` → Fire input detection
+
+**Exports**: `Glock` class  
+**Used By**: `main.js` (attached to player camera)
+
+**Key Methods**:
+- `update(deltaTime)` → Check for fire input, update weapon
+- `fire()` → Create bullet, play sound
+- `reload()` → Reload weapon (if implemented)
+
+**Technical Details**:
+- Fire rate: 500ms between shots
+- Audio: Procedural Web Audio API generation
+- Model: Attached to camera at specific offset
+
+---
+
+#### `game/src/player/bullet.js` - Projectile System
+**Full Path**: `Voxel-Arena/game/src/player/bullet.js`  
+**Purpose**: Bullet physics, rendering, lifetime  
+**Key Responsibilities**:
+- Bullet mesh creation (dark orange sphere)
+- Movement physics
+- Lifetime management
+- Collision detection (future)
+
+**Imports**: None (uses global `THREE`)
+
+**Exports**: `Bullet` class  
+**Used By**: 
+- `glock.js` (player bullets)
+- `Bot.js` (bot bullets)
+
+**Key Methods**:
+- `update(deltaTime)` → Update position, check lifetime
+- `isExpired()` → Check if bullet should be removed
+
+**Technical Details**:
+- Speed: 50 units/second
+- Lifetime: 3 seconds
+- Visual: Dark orange sphere (0.1 radius)
+
+---
+
+#### `game/src/player/avatar.js` - Avatar Editor
+**Full Path**: `Voxel-Arena/game/src/player/avatar.js`  
+**Purpose**: 3D character viewer in separate scene  
+**Key Responsibilities**:
+- Create separate Three.js scene for avatar preview
+- Render character model in preview container
+- Handle scene cleanup
+
+**Imports From**: `./character.js` (character model)
+
+**Exports**: `initAvatarEditor()` function  
+**Used By**: `main.js` (avatar menu)
+
+**Technical Details**:
+- Separate scene from main game
+- Renders in `#avatar-display` container
+- Proper cleanup on menu close
+
+### World Systems (5 modules)
+
+#### `game/src/world/arena.js` - Arena Dispatcher
+**Full Path**: `Voxel-Arena/game/src/world/arena.js`  
+**Purpose**: Loads appropriate arena based on mapId  
+**Key Responsibilities**:
+- Dispatch to correct arena definition
+- Convert Structure data to Three.js meshes
+- Return complete arena data object
+
+**Imports From**:
+- `./arena1.js` → Classic Arena definition
+- `./arena2.js` → Big Arena definition
+- `./structures.js` → Structure class
+
+**Exports**: `createArena(scene, mapId)` function  
+**Used By**: `main.js`, `mapPreview.js`
+
+**Returns**: Arena data object:
+```javascript
+{
+    structures: Structure[],      // Collision data
+    spawnPoint: {x, y, z},       // Default spawn
+    spawnPoints: [{x, y, z}],   // Multiple spawns
+    botSpawnAreas: {             // Team spawn areas
+        red: [{x, y, z}],
+        blue: [{x, y, z}]
+    },
+    metadata: {                  // Map info
+        name, description, size,
+        maxPlayers, maxBots, difficulty, theme
+    },
+    meshes: THREE.Mesh[]          // Visual meshes
+}
+```
+
+**Key Function**: `createMeshesFromStructures(scene, structures)` → Creates Three.js meshes
+
+---
+
+#### `game/src/world/arena1.js` - Classic Arena
+**Full Path**: `Voxel-Arena/game/src/world/arena1.js`  
+**Purpose**: Defines Classic Arena (100x100 units)  
+**Key Features**:
+- Ground plane (100x2x100)
+- Strategic cover obstacles
+- Multiple spawn points
+- Team spawn areas
+
+**Imports From**: `./structures.js` (Structure class)
+
+**Exports**: `createArena1()` function  
+**Used By**: `arena.js`
+
+**Returns**: Arena data object (see `arena.js` format)
+
+---
+
+#### `game/src/world/arena2.js` - Big Arena
+**Full Path**: `Voxel-Arena/game/src/world/arena2.js`  
+**Purpose**: Defines Big Arena (120x120 units)  
+**Key Features**:
+- Larger ground plane (120x2x120)
+- Elevated platforms
+- More complex geometry
+- Varied obstacle types
+
+**Imports From**: `./structures.js` (Structure class)
+
+**Exports**: `createArena2()` function  
+**Used By**: `arena.js`
+
+**Returns**: Arena data object (see `arena.js` format)
+
+---
+
+#### `game/src/world/structures.js` - Structure Class
+**Full Path**: `Voxel-Arena/game/src/world/structures.js`  
+**Purpose**: Data representation for collision objects  
+**Key Responsibilities**:
+- Separate data from visual representation
+- Provide collision data structure
+- Support different structure types
+
+**Imports**: None
+
+**Exports**: `Structure` class  
+**Used By**: `arena1.js`, `arena2.js`, `physics.js`
+
+**Structure Format**:
+```javascript
+new Structure(
+    {x, y, z},      // position
+    {x, y, z},      // size
+    'box'           // type (currently only 'box')
+)
+```
+
+**Key Properties**:
+- `position` → {x, y, z} world position
+- `size` → {x, y, z} dimensions
+- `type` → Structure type string
+
+---
+
+#### `game/src/world/mapPreview.js` - Map Preview System
+**Full Path**: `Voxel-Arena/game/src/world/mapPreview.js`  
+**Purpose**: 3D preview of maps in selection menu  
+**Key Responsibilities**:
+- Create 3D preview scene
+- Render arena structures
+- Show spawn point indicators
+- Display team spawn areas
+
+**Imports From**: `./arena.js` (to load arena data)
+
+**Exports**: `MapPreview` class  
+**Used By**: `ui.js` (map selection menu)
+
+**Key Methods**:
+- `loadMap(mapId)` → Load and render map
+- `update()` → Update preview (rotation, etc.)
+- `destroy()` → Cleanup preview scene
+
+**Technical Details**:
+- Separate Three.js scene
+- Rotating camera for visualization
+- Color-coded spawn indicators (green=player, red/blue=teams)
+
+### UI Systems (3 modules)
+
+#### `game/src/ui/ui.js` - UI Controller
+**Full Path**: `Voxel-Arena/game/src/ui/ui.js`  
+**Purpose**: Manages all UI menus, visibility, interactions  
+**Key Responsibilities**:
+- Show/hide menus (start, settings, pause, map selection)
+- Manage HUD visibility
+- Handle menu button clicks
+- Populate dynamic content (map buttons, settings)
+- Custom cursor management
+
+**Imports From**:
+- `../core/settings.js` → Settings management
+- `../world/mapPreview.js` → Map preview
+- `./customComponents.js` → Custom UI components
+
+**Exports**: 
+- `initUI()` → Initialize UI system
+- `UIManager` object → Menu management methods
+
+**Key Methods**:
+- `showMenu(menuId)` → Show specific menu
+- `showHUD()` → Show in-game HUD
+- `showPauseMenu()` → Show pause menu
+- `hideAllMenus()` → Hide all menus
+- `updateCustomCursorPosition(x, y)` → Move custom cursor
+- `populateMapSelection()` → Create map selection buttons
+
+**Used By**: `main.js`
+
+**Menu IDs**:
+- `start-menu` → Main menu
+- `map-selection-menu` → Map selection
+- `settings-menu` → Settings
+- `pause-menu` → Pause menu
+- `avatar-menu` → Avatar viewer
+- `hud` → In-game HUD
+
+---
+
+#### `game/src/ui/minimap.js` - Minimap System
+**Full Path**: `Voxel-Arena/game/src/ui/minimap.js`  
+**Purpose**: Top-down minimap rendering  
+**Key Features** (v0.21 rebuild):
+- Dynamic DOM creation (no HTML dependencies)
+- Player position (green dot)
+- Bot positions (red/blue dots by team)
+- Structures (gray rectangles)
+- Direction indicator
+- 4x zoom level
+- Proper coordinate system
+
+**Imports**: None (creates own DOM elements)
+
+**Exports**: `Minimap` class  
+**Used By**: `main.js`
+
+**Key Methods**:
+- `update(player, bots, structures)` → Render minimap
+- `destroy()` → Cleanup minimap elements
+
+**Technical Details**:
+- Canvas size: 200x200px
+- Position: Fixed top-right (20px, 20px)
+- Scale: 2.0 (4x zoom)
+- Coordinate system: X/Z plane (top-down)
+
+---
+
+#### `game/src/ui/customComponents.js` - Custom UI Components
+**Full Path**: `Voxel-Arena/game/src/ui/customComponents.js`  
+**Purpose**: CustomDropdown and CustomSlider components  
+**Key Responsibilities**:
+- Replace native HTML elements (select, input[range])
+- Match game aesthetic (green-on-black)
+- Work with custom cursor system
+- Maintain accessibility
+
+**Imports**: None
+
+**Exports**: 
+- `CustomDropdown` class
+- `CustomSlider` class
+
+**Used By**: `ui.js` (settings menu)
+
+**Features**:
+- Smooth animations
+- Hover effects
+- Keyboard navigation
+- Custom cursor compatibility
+
+### HTML/CSS Files
+
+#### `game/index.html` - Main Entry Point
+**Full Path**: `Voxel-Arena/game/index.html`  
+**Purpose**: HTML entry point, DOM structure, Three.js loading  
+**Key Elements**:
+- `<canvas id="game-canvas">` → Main game canvas
+- `<div id="ui-container">` → All UI menus container
+- `<script src="Three.js CDN">` → Loads global `THREE` object
+- `<script type="module" src="src/core/main.js">` → Game initialization
+
+**Menu Structure**:
+- `#start-menu` → Main menu
+- `#map-selection-menu` → Map selection
+- `#settings-menu` → Settings
+- `#pause-menu` → Pause menu
+- `#avatar-menu` → Avatar viewer
+- `#hud` → In-game HUD
+
+**Initialization**: Creates `Game` instance from `main.js`
+
+---
+
+#### `game/style.css` - Global Styling
+**Full Path**: `Voxel-Arena/game/style.css`  
+**Purpose**: Styling for all UI elements  
+**Key Features**:
+- Retro-futuristic green-on-black theme
+- Custom scrollbar styling
+- Menu animations
+- Responsive design
+- Custom cursor styles
+
+**Color Scheme**:
+- Background: Black (#000000)
+- Primary: Neon Green (#00ff00)
+- Borders: Green with transparency
+- Glow effects: Green shadows
+
+**Key Classes**:
+- `.menu` → Menu containers
+- `.button` → UI buttons
+- `.toggle-switch` → ON/OFF toggles
+- `.custom-dropdown` → Custom dropdowns
+- `.custom-slider` → Custom sliders
 
 ## Game Flow and Menu Navigation
 
@@ -109,7 +590,7 @@ A new avatar editor feature has been added to allow players to view their charac
 
 The AI bot system provides fully functional computer-controlled opponents with physics integration, intelligent behavior, and combat capabilities. The system consists of 9 modular components working together to create realistic bot behaviors.
 
-**Core Components:**
+**Core Components (9 Modules):**
 *   **Bot.js**: Main bot class integrating all AI systems with physics
 *   **BotBrain.js**: Central AI decision-making with state machines
 *   **BotSenses.js**: Perception system for enemy detection and environmental awareness

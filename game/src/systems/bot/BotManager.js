@@ -43,8 +43,55 @@ export class BotManager {
         this.eventListeners = new Map();
         
         console.log('BotManager initialized');
+
+        // Add logging configuration
+        this.debugLogging = true;
+        this.logBotLifecycle = true;
+        this.logPerformance = false;
     }
-    
+
+    /**
+     * Log bot lifecycle event
+     */
+    logBotEvent(eventType, bot, data = {}) {
+        if (!this.logBotLifecycle) return;
+
+        const timestamp = new Date().toISOString();
+        const logMessage = `[${timestamp}] Bot ${bot.id} (${bot.config.name}): ${eventType}`;
+
+        console.log(logMessage, data);
+
+        // Emit event for external logging systems
+        this.emit('botLogEvent', {
+            timestamp,
+            botId: bot.id,
+            botName: bot.config.name,
+            eventType,
+            data,
+            stats: this.getBotStats()
+        });
+    }
+
+    /**
+     * Log performance metrics
+     */
+    logPerformanceMetrics(deltaTime, updateTime) {
+        if (!this.logPerformance) return;
+
+        const performanceData = {
+            activeBots: this.stats.activeBots,
+            updateTime: updateTime.toFixed(2) + 'ms',
+            fps: (1000 / deltaTime).toFixed(1),
+            botGroups: {
+                high: this.updateGroups.high.length,
+                medium: this.updateGroups.medium.length,
+                low: this.updateGroups.low.length
+            }
+        };
+
+        console.log('[PERF]', performanceData);
+    }
+
     /**
      * Initialize bot manager with game
      */
@@ -164,6 +211,12 @@ export class BotManager {
             this.game.player.team = this.mapSettings.playerTeam;
             this.assignPlayerToTeamSpawn();
         }
+
+        // Debug: Log bot creation summary
+        console.log(`Bot creation complete. Total bots: ${this.bots.size}`);
+        console.log(`Red team bots: ${this.getBotsByTeam('red').length}`);
+        console.log(`Blue team bots: ${this.getBotsByTeam('blue').length}`);
+        console.log(`Player team: ${this.game.player?.team || 'not set'}`);
     }
     
     /**
@@ -215,9 +268,19 @@ export class BotManager {
         
         // Set spawn position
         const spawnPoint = this.getSpawnPoint(team);
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/a54cc6ed-de47-439c-aed6-cbc76d8a46bc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BotManager.js:270',message:'createBot: got spawn point',data:{botId,team,spawnPoint:{x:spawnPoint?.x,y:spawnPoint?.y,z:spawnPoint?.z},spawnPointExists:!!spawnPoint},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
+        
         // Adjust spawn point Y to be above the ground
         // Arena ground is at y=-2 to 0, character model has body at y=1.0, so spawn at y=1.0 to be above ground
         spawnPoint.y = 1.0; // Above ground level (character model offset)
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/a54cc6ed-de47-439c-aed6-cbc76d8a46bc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BotManager.js:273',message:'createBot: adjusted spawn Y, calling setPosition',data:{botId,spawnPoint:{x:spawnPoint.x,y:spawnPoint.y,z:spawnPoint.z}},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'E'})}).catch(()=>{});
+        // #endregion
+        
         bot.setPosition(spawnPoint);
         
         // Debug: Log bot spawn position
@@ -274,13 +337,26 @@ export class BotManager {
      */
     getSpawnPoint(team) {
         const teamSpawns = this.teamSpawnPoints[team];
+        
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/a54cc6ed-de47-439c-aed6-cbc76d8a46bc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BotManager.js:328',message:'getSpawnPoint: called',data:{team,teamSpawnsLength:teamSpawns?.length||0,generalSpawnsLength:this.spawnPoints?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'F'})}).catch(()=>{});
+        // #endregion
+        
         if (teamSpawns.length === 0) {
             // Fallback to general spawn points
-            return this.spawnPoints[Math.floor(Math.random() * this.spawnPoints.length)];
+            const fallbackSpawn = this.spawnPoints[Math.floor(Math.random() * this.spawnPoints.length)];
+            // #region agent log
+            fetch('http://127.0.0.1:7243/ingest/a54cc6ed-de47-439c-aed6-cbc76d8a46bc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BotManager.js:332',message:'getSpawnPoint: returning fallback',data:{team,fallbackSpawn:{x:fallbackSpawn?.x,y:fallbackSpawn?.y,z:fallbackSpawn?.z}},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'F'})}).catch(()=>{});
+            // #endregion
+            return fallbackSpawn;
         }
         
         // Return random spawn point for team
-        return teamSpawns[Math.floor(Math.random() * teamSpawns.length)];
+        const selectedSpawn = teamSpawns[Math.floor(Math.random() * teamSpawns.length)];
+        // #region agent log
+        fetch('http://127.0.0.1:7243/ingest/a54cc6ed-de47-439c-aed6-cbc76d8a46bc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BotManager.js:336',message:'getSpawnPoint: returning team spawn',data:{team,selectedSpawn:{x:selectedSpawn?.x,y:selectedSpawn?.y,z:selectedSpawn?.z}},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'F'})}).catch(()=>{});
+        // #endregion
+        return selectedSpawn;
     }
     
     /**
@@ -329,18 +405,13 @@ export class BotManager {
      * Update bots by priority
      */
     updateBotsByPriority(deltaTime) {
-        // Update high priority bots every frame
+        // Update all bots every frame to ensure smooth movement and consistent physics
+        // Optimization: We can throttle AI decision making inside the Bot class if needed
+        // but physics/movement must run every frame to prevent "slow motion" bugs at distance.
+        
         this.updateBots(this.updateGroups.high, deltaTime);
-        
-        // Update medium priority bots every 2 frames
-        if (this.game.frameCount % 2 === 0) {
-            this.updateBots(this.updateGroups.medium, deltaTime * 2);
-        }
-        
-        // Update low priority bots every 5 frames
-        if (this.game.frameCount % 5 === 0) {
-            this.updateBots(this.updateGroups.low, deltaTime * 5);
-        }
+        this.updateBots(this.updateGroups.medium, deltaTime);
+        this.updateBots(this.updateGroups.low, deltaTime);
     }
     
     /**
@@ -353,12 +424,12 @@ export class BotManager {
                     bot.update(deltaTime);
                 } catch (error) {
                     console.error(`Error updating bot ${bot.id}:`, error);
-                    // Remove problematic bot
-                    this.removeBot(bot.id);
+                    // Don't remove bot on error - try to recover instead
+                    this.handleBotError(bot, error);
                 }
             }
         });
-        
+
     }
     
     /**
@@ -382,14 +453,19 @@ export class BotManager {
             const botPosition = bot.mesh?.position || bot.position;
             const distance = botPosition.distanceTo(playerPosition);
             
-            if (distance < 20) {
+            if (distance < 40) {
                 this.updateGroups.high.push(bot);
-            } else if (distance < 50) {
+            } else if (distance < 80) {
                 this.updateGroups.medium.push(bot);
             } else {
                 this.updateGroups.low.push(bot);
             }
         });
+
+        // Debug: Log group counts occasionally
+        if (this.game.frameCount % 60 === 0) {
+            console.log(`Bot Groups - High: ${this.updateGroups.high.length}, Medium: ${this.updateGroups.medium.length}, Low: ${this.updateGroups.low.length}`);
+        }
         
     }
     
@@ -432,12 +508,37 @@ export class BotManager {
         // Set spawn position
         const spawnPoint = this.getSpawnPoint(bot.team);
         bot.setPosition(spawnPoint);
-        
+
         // Reactivate bot
         bot.activate();
-        
+
         // Emit event
         this.emit('botRespawn', { bot });
+    }
+
+    /**
+     * Handle bot errors gracefully
+     */
+    handleBotError(bot, error) {
+        console.error(`Bot ${bot.id} encountered error:`, error.message);
+
+        // Try to recover the bot instead of removing it
+        try {
+            // Reset bot systems
+            if (bot.brain) bot.brain.reset();
+            if (bot.movement) bot.movement.reset();
+            if (bot.combat) bot.combat.reset();
+
+            // Reinitialize bot position
+            const spawnPoint = this.getSpawnPoint(bot.team);
+            bot.setPosition(spawnPoint);
+
+            console.log(`Bot ${bot.id} recovered from error`);
+        } catch (recoveryError) {
+            console.error(`Failed to recover bot ${bot.id}:`, recoveryError);
+            // Only remove as last resort
+            this.removeBot(bot.id);
+        }
     }
     
     /**

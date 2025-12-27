@@ -1,8 +1,8 @@
 # Scratchpad - Development Notes & Progress Tracking
 
 **Last Updated**: December 2024  
-**Current Version**: 0.37  
-**Status**: Phase 1 Complete + Desktop Arena Builder + Critical Bug Fixes
+**Current Version**: 0.38  
+**Status**: Phase 1 Complete + Desktop Arena Builder + Critical Bug Fixes + Ground Texture Implementation
 
 ---
 
@@ -10,10 +10,9 @@
 
 ### ✅ **Phase 1 Complete**
 - **Core Gameplay**: Full single-player FPS with physics, weapons, and AI bots
-- **AI Bot System**: Fully functional with 7-module BotBrain system
+- **AI Bot System**: Fully functional with 9-module BotBrain system
 - **UI System**: Custom components, cursor system, and responsive design
-- **Technical Architecture**: 19 modular components with clean separation
-- **Desktop Arena Builder**: Electron app with asset library and drag-drop
+- **Technical Architecture**: 25 modular components (19 core + 6 supporting) with clean separation
 - **Documentation**: Comprehensive documentation suite
 
 ### 🎯 **Recent Major Achievements**
@@ -33,6 +32,88 @@
 ---
 
 ## 📋 **Version History - Recent Updates**
+
+### Version 0.39 - Rendering & Physics Fixes (Current)
+**Status**: ✅ Complete
+
+#### Issues Resolved
+- **Bot Disappearance**: Fixed issue where bots disappeared when viewed from behind/angles.
+- **Physics Instability**: Fixed bots "jerking" into the ground and potential falling through floors.
+- **Movement Logic**: Fixed duplicate code and Y-axis contamination in bot movement.
+
+#### Implementation Details
+- **Frustum Culling**: Disabled `frustumCulled` for all objects in the bot hierarchy (Groups & Meshes).
+- **Matrix Updates**: Enabled `matrixAutoUpdate` to ensure position sync.
+- **Safety**: Forced infinite bounding sphere radius for all bot meshes.
+- **Physics Collision**: Adjusted `physics.js` collision box to align with bot body (feet-to-head) instead of floating, resolving the "jerk" loop on platforms.
+- **Movement Safety**: Removed duplicate `updateMovement` function, forced Y-velocity to 0 in steering, added terminal velocity caps (-30.0) and NaN checks.
+- **Debug Tools**: Added `window.DEBUG_BOT_VISUALS`, `DEBUG_BOT_MOVEMENT`, and `DEBUG_BOT_PHYSICS` flags with logging and visual helpers.
+- **Documentation**: Added comprehensive analysis in `docs/debugs/rendering_issue.md`.
+
+#### Files Modified
+- `game/src/systems/bot/Bot.js`: Implemented recursive culling disable, physics hardening, and debug tools.
+- `game/src/systems/bot/BotMovement.js`: Cleaned up movement logic, removed duplicate code, added safety checks.
+- `game/src/core/physics.js`: Fixed collision box alignment.
+- `docs/debugs/rendering_issue.md`: Created analysis document.
+
+**Status**: ✅ Complete
+
+#### Overview
+Added a custom sci-fi metal floor texture to the arena ground surfaces, enhancing visual quality and immersion. The texture is seamlessly tiled across the ground based on arena size.
+
+#### Features Implemented
+
+**1. Ground Texture Asset**
+- Generated custom dark sci-fi metal floor texture with subtle grid pattern
+- High contrast design matching the game's aesthetic
+- Seamless tiling for any arena size
+- Saved to `game/assets/ground_texture.png`
+
+**2. Texture Loading System**
+- Integrated THREE.TextureLoader in arena.js
+- Automatic texture wrapping configuration (RepeatWrapping)
+- Material properties optimized for realistic metal appearance:
+  - Roughness: 0.8 (slightly rough metal)
+  - Metalness: 0.2 (subtle metallic sheen)
+
+**3. Smart Ground Detection**
+- Heuristic detection: structures at y=-1 with height 2
+- Automatically applies texture only to ground surfaces
+- Other structures maintain default gray material
+
+**4. Dynamic Texture Scaling**
+- Texture repeats based on ground size (every 10 units)
+- Arena1 (100x100): 10x10 texture repeats
+- Arena2 (120x120): 12x12 texture repeats
+- Ensures consistent texture detail across different arena sizes
+
+#### Technical Implementation
+
+**File Modified**: `game/src/world/arena.js`
+- Added texture loader and ground material setup
+- Implemented material cloning for per-mesh texture configuration
+- Added conditional logic to detect and texture ground structures
+
+**Texture Properties**:
+```javascript
+groundTexture.wrapS = THREE.RepeatWrapping;
+groundTexture.wrapT = THREE.RepeatWrapping;
+material.map.repeat.set(structure.size.x / 10, structure.size.z / 10);
+```
+
+#### Visual Improvements
+- ✅ Enhanced arena atmosphere with detailed floor texture
+- ✅ Improved depth perception and spatial awareness
+- ✅ Consistent visual quality across both arenas
+- ✅ Maintains 60fps performance target
+
+#### Status: ✅ Complete
+- **Texture Asset**: Generated and saved
+- **Loading System**: Fully functional
+- **Ground Detection**: Working correctly
+- **Texture Scaling**: Dynamic and proportional
+- **Performance**: No impact on frame rate
+- **Documentation**: Updated
 
 ### Version 0.37 - Critical Bug Fixes (December 2024)
 **Status**: ✅ Complete
