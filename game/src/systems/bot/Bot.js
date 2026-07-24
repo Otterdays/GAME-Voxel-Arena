@@ -12,11 +12,6 @@
  */
 
 import { BotBrain } from './BotBrain.js';
-import { BotSenses } from './BotSenses.js';
-import { BotMemory } from './BotMemory.js';
-import { BotPersonality } from './BotPersonality.js';
-import { BotCombat } from './BotCombat.js';
-import { BotMovement } from './BotMovement.js';
 import { BotCommunication } from './BotCommunication.js';
 import { createBotModel } from './BotModel.js';
 import { checkCollision } from '../../core/physics.js';
@@ -100,6 +95,9 @@ export class Bot {
         this.errorCount = 0;
         this.maxErrorsBeforeReset = 3;
         this.lastErrorTime = 0;
+        this._renderDebugLogged = false;
+        this.teamColorHex = team === 'red' ? 0xff0000 : 0x0000ff;
+        this._flashingLowHp = false;
 
         // Initialize bot systems
         this.initializeSystems();
@@ -112,126 +110,116 @@ export class Bot {
     }
 
     /**
-     * Initialize all bot systems
+     * Initialize all bot systems — BotBrain owns subsystems (single instance each)
      */
     initializeSystems() {
-        // Initialize brain first (core system)
         this.brain = new BotBrain(this, this.difficulty);
 
-        // Initialize other systems
-        this.senses = new BotSenses(this.brain);
-        this.memory = new BotMemory(this.brain);
-        this.personality = new BotPersonality(this.brain, this.difficulty);
-        this.combat = new BotCombat(this.brain);
-        this.movement = new BotMovement(this.brain);
+        // Wire Bot to brain-owned systems (no duplicate construction)
+        this.senses = this.brain.senses;
+        this.memory = this.brain.memory;
+        this.personality = this.brain.personality;
+        this.combat = this.brain.combat;
+        this.movement = this.brain.movement;
         this.communication = new BotCommunication(this.brain);
-
-        // Set up system references
-        this.brain.senses = this.senses;
-        this.brain.memory = this.memory;
-        this.brain.personality = this.personality;
-        this.brain.combat = this.combat;
-        this.brain.movement = this.movement;
-        this.communication = this.communication;
     }
 
     /**
-     * Create bot model
+     * Apply frustum-culling disable without Infinity bounds (those corrupt transforms)
      */
-    createModel() {
-        // Create bot mesh using dedicated bot model
-        const teamColor = this.team === 'red' ? 0xff0000 : 0x0000ff;
-        this.mesh = createBotModel(teamColor);
-        this.mesh.position.copy(this.position);
-        this.mesh.rotation.copy(this.rotation);
-
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/a54cc6ed-de47-439c-aed6-cbc76d8a46bc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Bot.js:144',message:'createModel: mesh created, initial position',data:{botId:this.id,thisPosition:{x:this.position.x,y:this.position.y,z:this.position.z},meshPosition:{x:this.mesh.position.x,y:this.mesh.position.y,z:this.mesh.position.z}},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
-
-        // Set user data
-        this.mesh.userData = {
-            isBot: true,
-            botId: this.id,
-            team: this.team,
-            type: 'bot',
-            botType: 'standard'
-        };
-
-        // Add to scene
-        this.game.scene.add(this.mesh);
-        
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/a54cc6ed-de47-439c-aed6-cbc76d8a46bc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Bot.js:158',message:'createModel: mesh added to scene',data:{botId:this.id,meshInScene:this.game.scene.children.includes(this.mesh),meshPosition:{x:this.mesh.position.x,y:this.mesh.position.y,z:this.mesh.position.z},sceneChildrenCount:this.game.scene.children.length},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
-
-        // AGGRESSIVE ANTI-CULLING AND VISIBILITY FIXES
-        this.mesh.frustumCulled = false; // Disable culling for the group
-        this.mesh.matrixAutoUpdate = true;
-        this.mesh.matrixWorldAutoUpdate = true;
-
-        // Force high render order to ensure the bot renders
-        this.mesh.renderOrder = 999;
-
-        // Add onBeforeRender callback to force visibility every frame
-        this.mesh.onBeforeRender = () => {
-            this.mesh.visible = true;
-        };
-
-        // Force bounding sphere to be huge and disable automatic computation
-        this.mesh.traverse((child) => {
-            // Disable culling for ALL objects (Groups, Meshes, etc.)
+    applyRenderSafety(root) {
+        if (!root) return;
+        root.frustumCulled = false;
+        root.matrixAutoUpdate = true;
+        root.visible = true;
+        root.traverse((child) => {
             child.frustumCulled = false;
-            child.matrixAutoUpdate = true; // Ensure matrices are updated
-            child.matrixWorldAutoUpdate = true;
-
+            child.matrixAutoUpdate = true;
             if (child.isMesh) {
-                child.layers.set(0); // Ensure visible to main camera
-                child.visible = true; // Ensure mesh is visible
-                child.renderOrder = 999; // High render order
-
-                // Add onBeforeRender callback for each mesh too
-                child.onBeforeRender = () => {
-                    child.visible = true;
-                };
-
-                // Ensure material renders both sides
+                child.layers.set(0);
+                child.visible = true;
                 if (child.material) {
                     child.material.side = THREE.DoubleSide;
                     child.material.depthWrite = true;
                     child.material.depthTest = true;
                     child.material.needsUpdate = true;
                 }
-
-                // Force geometry bounds to be huge and disable auto computation
                 if (child.geometry) {
                     child.geometry.computeBoundingSphere();
-                    if (child.geometry.boundingSphere) {
-                        child.geometry.boundingSphere.radius = Infinity;
-                    }
                     child.geometry.computeBoundingBox();
-                    if (child.geometry.boundingBox) {
-                        child.geometry.boundingBox.min.set(-Infinity, -Infinity, -Infinity);
-                        child.geometry.boundingBox.max.set(Infinity, Infinity, Infinity);
-                    }
                 }
             }
         });
+    }
 
-        // Debug: Log bot model creation
+    /**
+     * Restore team body color after low-HP flash
+     */
+    restoreTeamColors() {
+        if (!this.mesh) return;
+        this.mesh.traverse((child) => {
+            if (child.isMesh && child.material && child.material.color &&
+                child.userData?.isTeamBody !== false &&
+                !child.userData?.isHpBar &&
+                child.material.color.getHex &&
+                (child.material.color.getHex() === 0xff0000 ||
+                 child.material.color.getHex() === 0x0000ff ||
+                 child.material.color.r > 0.9 && child.material.color.g < 0.6)) {
+                // Only recolor main team-tinted meshes via stored team color on torso-like materials
+            }
+        });
+        // Recolor standard materials that match team (MeshStandardMaterial on body parts)
+        this.mesh.traverse((child) => {
+            if (!child.isMesh || !child.material || !child.material.color) return;
+            if (child.userData?.skipTeamColor) return;
+            const hex = child.material.color.getHex();
+            // Skip eyes (cyan), joints (dark), mouth (black), HP bar greens
+            if (hex === 0x00ffff || hex === 0x00aaaa || hex === 0x333333 ||
+                hex === 0x000000 || hex === 0x00ff00 || hex === 0xffff00) return;
+            if (hex === 0xffccaa) return; // skin
+            child.material.color.setHex(this.teamColorHex);
+        });
+    }
+
+    isTransformValid(vec3OrEuler) {
+        if (!vec3OrEuler) return false;
+        return !isNaN(vec3OrEuler.x) && !isNaN(vec3OrEuler.y) && !isNaN(vec3OrEuler.z);
+    }
+
+    logRenderDebugOnce(reason, data = {}) {
+        if (!window.DEBUG_BOT_RENDER || this._renderDebugLogged) return;
+        this._renderDebugLogged = true;
+        console.warn(`[DEBUG_BOT_RENDER] Bot ${this.id}: ${reason}`, data);
+    }
+
+    /**
+     * Create bot model
+     */
+    createModel() {
+        const teamColor = this.teamColorHex;
+        this.mesh = createBotModel(teamColor);
+        this.mesh.position.copy(this.position);
+        this.mesh.rotation.copy(this.rotation);
+
+        // Merge userData — preserve updateHealth / hpBar from createBotModel
+        Object.assign(this.mesh.userData, {
+            isBot: true,
+            botId: this.id,
+            team: this.team,
+            type: 'bot',
+            botType: 'standard'
+        });
+
+        this.game.scene.add(this.mesh);
+        this.applyRenderSafety(this.mesh);
+
         console.log(`Bot ${this.id} model created and added to scene`, {
             position: this.mesh.position,
             visible: this.mesh.visible,
-            layers: this.mesh.layers.mask,
-            children: this.mesh.children.length,
-            botType: this.mesh.userData.botType,
-            renderOrder: this.mesh.renderOrder
+            children: this.mesh.children.length
         });
 
-        // Add debug visualization
         this.addDebugVisuals();
-
-        // Create weapon
         this.createWeapon();
     }
 
@@ -239,64 +227,17 @@ export class Bot {
      * Create weapon
      */
     createWeapon() {
-        // Create Glock instance for the bot
-        this.weapon = new Glock(this.mesh, this.game); // Pass bot's mesh and game instance
-        this.weaponMesh = this.weapon.mesh; // Reference the Glock's mesh
+        this.weapon = new Glock(this.mesh, this.game, this);
+        this.weaponMesh = this.weapon.mesh;
 
-        // AGGRESSIVE ANTI-CULLING FIXES FOR WEAPON
         if (this.weaponMesh) {
-            this.weaponMesh.frustumCulled = false;
-            this.weaponMesh.matrixAutoUpdate = true;
-            this.weaponMesh.matrixWorldAutoUpdate = true;
-            this.weaponMesh.renderOrder = 999;
-
-            // Add onBeforeRender callback for weapon
-            this.weaponMesh.onBeforeRender = () => {
-                this.weaponMesh.visible = true;
-            };
-
-            // Traverse weapon mesh to apply same anti-culling fixes as bot model
-            this.weaponMesh.traverse((child) => {
-                child.frustumCulled = false; // Disable culling for ALL objects
-                child.matrixAutoUpdate = true;
-                child.matrixWorldAutoUpdate = true;
-
-                if (child.isMesh) {
-                    child.layers.set(0); // Ensure visible to main camera
-                    child.visible = true; // Ensure mesh is visible
-                    child.renderOrder = 999;
-
-                    // Add onBeforeRender callback
-                    child.onBeforeRender = () => {
-                        child.visible = true;
-                    };
-
-                    // Ensure material renders both sides
-                    if (child.material) {
-                        child.material.side = THREE.DoubleSide;
-                        child.material.depthWrite = true;
-                        child.material.depthTest = true;
-                        child.material.needsUpdate = true;
-                    }
-
-                    // Force geometry bounds to be huge
-                    if (child.geometry) {
-                        child.geometry.computeBoundingSphere();
-                        if (child.geometry.boundingSphere) {
-                            child.geometry.boundingSphere.radius = Infinity;
-                        }
-                        child.geometry.computeBoundingBox();
-                        if (child.geometry.boundingBox) {
-                            child.geometry.boundingBox.min.set(-Infinity, -Infinity, -Infinity);
-                            child.geometry.boundingBox.max.set(Infinity, Infinity, Infinity);
-                        }
-                    }
-                }
-            });
+            this.applyRenderSafety(this.weaponMesh);
+            this.weaponMesh.userData.skipTeamColor = true;
         }
 
-        // Set weapon in combat system
-        this.combat.setWeapon(this.weapon);
+        if (this.combat) {
+            this.combat.setWeapon(this.weapon);
+        }
     }
 
     /**
@@ -306,8 +247,8 @@ export class Bot {
         const bulletPosition = this.position.clone();
         bulletPosition.y += 1.5; // Eye level
 
-        // Add bullet to game
-        this.game.addBullet(bulletPosition, direction);
+        // Add bullet to game (owner = this bot for team-safe hits)
+        this.game.addBullet(bulletPosition, direction, this);
     }
 
     /**
@@ -316,33 +257,17 @@ export class Bot {
     update(deltaTime) {
         if (!this.isAlive || !this.isActive) return;
 
-        // #region agent log
-        if (!this._firstUpdateLogged) {
-            this._firstUpdateLogged = true;
-            fetch('http://127.0.0.1:7243/ingest/a54cc6ed-de47-439c-aed6-cbc76d8a46bc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Bot.js:316',message:'update: first update call',data:{botId:this.id,isAlive:this.isAlive,isActive:this.isActive,meshExists:!!this.mesh,meshInScene:this.mesh?this.game.scene.children.includes(this.mesh):false,thisPosition:{x:this.position.x,y:this.position.y,z:this.position.z},meshPosition:this.mesh?{x:this.mesh.position.x,y:this.mesh.position.y,z:this.mesh.position.z}:null,meshVisible:this.mesh?.visible},timestamp:Date.now(),sessionId:'debug-session',runId:'runtime',hypothesisId:'G'})}).catch(()=>{});
-        }
-        // #endregion
-
         try {
-            // Update bot systems
             if (this.brain) {
                 this.brain.update(deltaTime);
             }
 
-            // Apply physics
             this.updatePhysics(deltaTime);
-
-            // Update bot model
             this.updateModel(deltaTime);
-
-            // Update statistics
             this.updateStatistics(deltaTime);
-
-            // Update last update time
             this.lastUpdateTime = Date.now();
         } catch (error) {
             console.error(`Bot ${this.id} update error:`, error);
-            // Try to continue instead of crashing
             this.handleUpdateError(error);
         }
     }
@@ -666,9 +591,7 @@ export class Bot {
         // Update position from mesh
         this.position.copy(this.mesh.position);
 
-        // Apply friction (less aggressive since BotMovement also applies friction)
-        this.velocity.x *= 0.98;
-        this.velocity.z *= 0.98;
+        // No horizontal friction here — BotMovement owns speed; double friction was killing motion
     }
 
     /**
@@ -699,30 +622,33 @@ export class Bot {
      * Update bot model
      */
     updateModel(deltaTime) {
-        // #region agent log
-        const beforeMeshPos = this.mesh ? {x:this.mesh.position.x,y:this.mesh.position.y,z:this.mesh.position.z} : null;
-        const thisPos = {x:this.position.x,y:this.position.y,z:this.position.z};
-        // #endregion
-        
-        // Update position
+        if (!this.mesh) return;
+
+        // Guard against NaN transforms (WebGL drops NaN matrices → invisible mesh)
+        if (!this.isTransformValid(this.position)) {
+            this.logRenderDebugOnce('NaN position', { position: this.position });
+            this.position.set(0, 1, 0);
+            this.setSpawnPosition();
+        }
+        if (!this.isTransformValid(this.rotation)) {
+            this.logRenderDebugOnce('NaN rotation', { rotation: this.rotation });
+            this.rotation.set(0, 0, 0);
+        }
+
         this.mesh.position.copy(this.position);
         this.mesh.rotation.copy(this.rotation);
-        
-        // #region agent log
-        const afterMeshPos = {x:this.mesh.position.x,y:this.mesh.position.y,z:this.mesh.position.z};
-        const posChanged = beforeMeshPos && (Math.abs(beforeMeshPos.x - afterMeshPos.x) > 0.001 || Math.abs(beforeMeshPos.y - afterMeshPos.y) > 0.001 || Math.abs(beforeMeshPos.z - afterMeshPos.z) > 0.001);
-        fetch('http://127.0.0.1:7243/ingest/a54cc6ed-de47-439c-aed6-cbc76d8a46bc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Bot.js:688',message:'updateModel: position sync',data:{botId:this.id,beforeMeshPosition:beforeMeshPos,thisPosition:thisPos,afterMeshPosition:afterMeshPos,positionChanged:posChanged},timestamp:Date.now(),sessionId:'debug-session',runId:'runtime',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
+        this.mesh.visible = true;
 
-        // Update weapon
+        if (!this.mesh.visible) {
+            this.logRenderDebugOnce('mesh.visible became false');
+            this.mesh.visible = true;
+        }
+
         if (this.weapon) {
             this.weapon.update(deltaTime);
         }
 
-        // Update visual effects
         this.updateVisualEffects(deltaTime);
-
-        // Update debug visuals
         this.updateDebugVisuals();
     }
 
@@ -730,13 +656,10 @@ export class Bot {
      * Update visual effects
      */
     updateVisualEffects(deltaTime) {
-        // Update health bar if available
         if (this.mesh && this.mesh.userData && this.mesh.userData.updateHealth) {
             this.mesh.userData.updateHealth(this.health, this.maxHealth);
 
-            // Billboard the health bar (face camera)
             if (this.mesh.userData.hpBar && this.game.camera) {
-                // Safety check to prevent NaN rotation if positions are identical
                 const distSq = this.game.camera.position.distanceToSquared(this.mesh.position);
                 if (distSq > 0.0001) {
                     this.mesh.userData.hpBar.lookAt(this.game.camera.position);
@@ -744,14 +667,22 @@ export class Bot {
             }
         }
 
-        // Health indicator - Flash red when low health (< 30%)
-        if (this.health < this.maxHealth * 0.3) {
+        // Flash only mesh materials when low HP; restore team color when healthy
+        const lowHp = this.health < this.maxHealth * 0.3;
+        if (lowHp) {
+            this._flashingLowHp = true;
             const flashIntensity = Math.sin(Date.now() * 0.01) * 0.5 + 0.5;
-            this.mesh.children.forEach(child => {
-                if (child.material && child.material.color) {
-                    child.material.color.setRGB(1, flashIntensity, flashIntensity);
-                }
+            this.mesh.traverse((child) => {
+                if (!child.isMesh || !child.material || !child.material.color) return;
+                if (child.userData?.skipTeamColor) return;
+                const hex = child.material.color.getHex();
+                if (hex === 0x00ffff || hex === 0x333333 || hex === 0x000000 ||
+                    hex === 0xffccaa) return;
+                child.material.color.setRGB(1, flashIntensity, flashIntensity);
             });
+        } else if (this._flashingLowHp) {
+            this._flashingLowHp = false;
+            this.restoreTeamColors();
         }
     }
 
@@ -839,15 +770,14 @@ export class Bot {
         console.log(`Bot ${this.id} DIED. Killer:`, killer);
 
         this.isAlive = false;
+        this._deathHandled = false; // BotManager schedules single respawn
         this.stats.deaths++;
 
-        // Update emotional state
         if (this.personality) {
             this.personality.addExperienceModifier('fear', 0.3);
             this.personality.addExperienceModifier('confidence', -0.2);
         }
 
-        // Record death event
         if (this.memory) {
             this.memory.recordObservation({
                 type: 'death',
@@ -857,17 +787,16 @@ export class Bot {
             }, 'death');
         }
 
-        // Update killer's stats
         if (killer && killer.stats) {
             killer.stats.kills++;
         }
 
-        // Remove from scene
-        this.game.scene.remove(this.mesh);
+        if (this.mesh) {
+            this.mesh.visible = false;
+            this.game.scene.remove(this.mesh);
+        }
 
-        // Schedule respawn
-        this.scheduleRespawn();
-
+        // Manager handleBotDeath schedules respawn (avoid double timers)
         console.log(`Bot ${this.id} (${this.config.name}) died`);
     }
 
@@ -886,36 +815,42 @@ export class Bot {
      * Respawn bot
      */
     respawn() {
-        // Reset bot state
         this.isAlive = true;
+        this.isActive = true;
+        this._deathHandled = false;
         this.health = this.maxHealth;
         this.armor = this.maxArmor;
-        this.position.set(0, 0, 0); // Will be set to spawn point
         this.velocity.set(0, 0, 0);
+        this.velocityY = 0;
+        this.rotation.set(0, 0, 0);
         this.spawnTime = Date.now();
+        this._renderDebugLogged = false;
+        this._flashingLowHp = false;
 
-        // Reset weapon
         if (this.weapon) {
             this.weapon.ammo = this.weapon.maxAmmo;
             this.weapon.isReloading = false;
         }
 
-        // Reset AI systems
         if (this.brain) {
             this.brain.reset();
         }
 
-        // Recreate model if it doesn't exist
         if (!this.mesh) {
             this.createModel();
+        } else {
+            this.applyRenderSafety(this.mesh);
+            this.restoreTeamColors();
+            if (!this.mesh.parent) {
+                this.game.scene.add(this.mesh);
+            }
+            this.mesh.visible = true;
         }
 
-        // Set spawn position
         this.setSpawnPosition();
-
-        // Ensure bot is properly added back to scene
-        if (this.mesh && !this.mesh.parent) {
-            this.game.scene.add(this.mesh);
+        if (this.mesh) {
+            this.mesh.position.copy(this.position);
+            this.mesh.rotation.copy(this.rotation);
         }
 
         console.log(`Bot ${this.id} (${this.config.name}) respawned`);
@@ -925,13 +860,14 @@ export class Bot {
      * Set spawn position
      */
     setSpawnPosition() {
-        // Get spawn points from game
-        const spawnPoints = this.game.getSpawnPoints();
-
+        const spawnPoints = this.game.getSpawnPoints() || [];
         if (spawnPoints.length > 0) {
-            // Find safe spawn point
-            const safeSpawnPoint = this.findSafeSpawnPoint(spawnPoints);
-            this.position.copy(safeSpawnPoint);
+            const safe = this.findSafeSpawnPoint(spawnPoints);
+            const pos = safe.clone ? safe.clone() : new THREE.Vector3(safe.x, safe.y, safe.z);
+            pos.y = 1.0;
+            this.setPosition(pos);
+        } else {
+            this.setPosition(new THREE.Vector3(0, 1, 0));
         }
     }
 
@@ -1121,17 +1057,13 @@ export class Bot {
      * Set bot position
      */
     setPosition(position) {
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/a54cc6ed-de47-439c-aed6-cbc76d8a46bc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Bot.js:1097',message:'setPosition: called',data:{botId:this.id,newPosition:{x:position?.x,y:position?.y,z:position?.z},currentThisPosition:{x:this.position.x,y:this.position.y,z:this.position.z},currentMeshPosition:{x:this.mesh?.position.x,y:this.mesh?.position.y,z:this.mesh?.position.z},meshExists:!!this.mesh},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
-        
+        if (!position || isNaN(position.x) || isNaN(position.y) || isNaN(position.z)) {
+            this.logRenderDebugOnce('setPosition got invalid position', { position });
+            return;
+        }
         this.position.copy(position);
         if (this.mesh) {
             this.mesh.position.copy(position);
-            
-            // #region agent log
-            fetch('http://127.0.0.1:7243/ingest/a54cc6ed-de47-439c-aed6-cbc76d8a46bc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Bot.js:1100',message:'setPosition: mesh position updated',data:{botId:this.id,thisPosition:{x:this.position.x,y:this.position.y,z:this.position.z},meshPosition:{x:this.mesh.position.x,y:this.mesh.position.y,z:this.mesh.position.z},positionsMatch:this.position.equals(this.mesh.position)},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'C'})}).catch(()=>{});
-            // #endregion
         }
     }
 
@@ -1139,6 +1071,10 @@ export class Bot {
      * Set bot rotation
      */
     setRotation(rotation) {
+        if (!rotation || isNaN(rotation.x) || isNaN(rotation.y) || isNaN(rotation.z)) {
+            this.logRenderDebugOnce('setRotation got invalid rotation', { rotation });
+            return;
+        }
         this.rotation.copy(rotation);
         if (this.mesh) {
             this.mesh.rotation.copy(rotation);

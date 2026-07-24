@@ -1,13 +1,22 @@
 # Voxel Arena - Project Summary
 
+<!-- PRESERVATION RULE: Never delete or replace content. Append or annotate only. -->
+
 ## Project Overview
 Voxel Arena is a browser-based 3D first-person shooter game built with HTML5, CSS3, and JavaScript using the Three.js library. The game features a retro-futuristic aesthetic with green-on-black UI styling and provides a complete single-player FPS experience.
 
 ## Current Status
-**Version**: 0.34 (Stable Release)
-**Last Updated**: December 2024
-**Platform**: Web Browser (Cross-platform)
-**Status**: All critical bugs fixed, fully functional
+**Version**: 0.47  
+**Last Updated**: 2026-07-24  
+**Platform**: Web Browser (Cross-platform)  
+**Status**: SpecOps UI (SOCOM/Clancy) + combat loop; Phase 1 playable
+
+> [AMENDED 2026-07-24]: Bumped to 0.47 SpecOps UI. Prior: 0.46 combat loop. See `docs/SUMMARY.md` and `docs/CHANGELOG.md`. Older feature list below retained.
+
+## Recent (0.43–0.46)
+- Lean bot chase/face/shoot AI; FP Glock arm + tracers
+- Touchpad look clamps + stuck-key clear
+- Combat HUD (HP/ammo/kills), hitmarkers, player respawn, team-safe bullets
 
 ## Core Features Implemented
 

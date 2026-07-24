@@ -14,153 +14,200 @@ export class BotMovement {
     constructor(brain) {
         this.brain = brain;
         this.bot = brain.bot;
-        
-        // Movement parameters
+
+        // Movement parameters — snappy, match player feel
         this.maxSpeed = this.getMaxSpeed();
         this.acceleration = this.getAcceleration();
         this.turnSpeed = this.getTurnSpeed();
-        this.stoppingDistance = 1.0;
+        this.stoppingDistance = 1.5;
         this.avoidanceRadius = 2.0;
-        
-        // Pathfinding
+
+        // Pathfinding (disabled for direct seek — A* was fighting patrol targets)
+        this.pathfindingEnabled = false;
         this.currentPath = [];
         this.pathIndex = 0;
-        this.pathUpdateInterval = 0.5; // Update path every 500ms
+        this.pathUpdateInterval = 0.5;
         this.lastPathUpdate = 0;
         this.pathfindingGrid = null;
-        this.gridResolution = 1.0; // 1 unit per grid cell
-        
+        this.gridResolution = 1.0;
+
         // Movement state
         this.currentTarget = null;
-        this.movementState = 'idle'; // idle, moving, pathfinding, avoiding
+        this.movementState = 'idle';
         this.velocity = new THREE.Vector3();
         this.desiredVelocity = new THREE.Vector3();
         this.steeringForce = new THREE.Vector3();
-        
+
         // Obstacle avoidance
         this.obstacles = [];
         this.avoidanceForce = new THREE.Vector3();
         this.lookAheadDistance = 3.0;
-        this.avoidanceWeight = 1.0;
-        
-        // Flocking behavior
-        this.flockingEnabled = true;
-        this.separationWeight = 1.0;
-        this.alignmentWeight = 0.5;
-        this.cohesionWeight = 0.3;
-        this.flockingRadius = 5.0;
-        
-        // Cover seeking
-        this.coverSeekingEnabled = true;
+        this.avoidanceWeight = 0.5;
+
+        // Flocking off by default — was canceling seek when bots clustered at spawn
+        this.flockingEnabled = false;
+        this.separationWeight = 0.8;
+        this.alignmentWeight = 0.2;
+        this.cohesionWeight = 0.1;
+        this.flockingRadius = 4.0;
+
+        // Cover seeking off by default — was stealing patrol/hunt targets every frame
+        this.coverSeekingEnabled = false;
         this.currentCover = null;
-        this.coverUpdateInterval = 1.0; // Update cover every second
+        this.coverUpdateInterval = 1.0;
         this.lastCoverUpdate = 0;
-        
-        // Formation movement
+
         this.formationEnabled = false;
         this.formationPosition = null;
         this.formationOffset = new THREE.Vector3();
-        
-        // Smooth movement
+
         this.smoothMovement = true;
         this.movementSmoothing = 0.1;
-        this.rotationSmoothing = 0.2;
-        
+        this.rotationSmoothing = 0.15;
     }
-    
+
     /**
-     * Main update loop
+     * Main update loop — keep it lean so bots actually move
      */
     update(deltaTime) {
-        // Update pathfinding
-        this.updatePathfinding(deltaTime);
-        
-        // Update movement
-        this.updateMovement(deltaTime);
-        
-        // Update obstacle avoidance
-        this.updateObstacleAvoidance(deltaTime);
-        
-        // Update flocking behavior
+        const dt = Math.min(deltaTime, 0.05); // clamp spike frames
+
+        if (this.pathfindingEnabled) {
+            this.updatePathfinding(dt);
+        }
+
+        this.updateMovement(dt);
+
         if (this.flockingEnabled) {
-            this.updateFlocking(deltaTime);
+            this.updateFlocking(dt);
         }
-        
-        // Update cover seeking
+
         if (this.coverSeekingEnabled) {
-            this.updateCoverSeeking(deltaTime);
+            this.updateCoverSeeking(dt);
         }
-        
-        // Update formation movement
+
         if (this.formationEnabled) {
-            this.updateFormationMovement(deltaTime);
+            this.updateFormationMovement(dt);
         }
-        
-        // Apply movement to bot
-        this.applyMovement(deltaTime);
+
+        this.applyMovement(dt);
     }
-    
+
+    /**
+     * Horizontal distance (ignore Y so patrol Y mismatch never freezes bots)
+     */
+    horizontalDistance(a, b) {
+        const dx = a.x - b.x;
+        const dz = a.z - b.z;
+        return Math.sqrt(dx * dx + dz * dz);
+    }
+
     /**
      * Update pathfinding system
      */
     updatePathfinding(deltaTime) {
         const currentTime = Date.now();
-        
-        // Update path if needed
+
         if (currentTime - this.lastPathUpdate > this.pathUpdateInterval * 1000) {
             this.updatePath();
             this.lastPathUpdate = currentTime;
         }
-        
-        // Follow current path
+
         if (this.currentPath.length > 0) {
             this.followPath();
         }
     }
-    
+
     /**
-     * Update movement system
+     * Direct seek with proper acceleration — no double friction, no tiny steering*dt
      */
     updateMovement(deltaTime) {
         try {
-            // Calculate desired velocity based on current target
-            if (this.currentTarget) {
-                if (window.DEBUG_BOT_MOVEMENT) {
-                    console.debug(`Bot ${this.bot.id} moving to target:`, this.currentTarget);
-                }
+            // Bootstrap: if brain hasn't assigned a target yet, patrol
+            if (!this.currentTarget) {
+                this.executePatrol({});
+            }
 
-                const direction = this.currentTarget.clone().sub(this.bot.position);
-                direction.y = 0; // Force horizontal movement only
-                direction.normalize();
-                this.desiredVelocity = direction.multiplyScalar(this.maxSpeed);
-            } else {
+            if (!this.currentTarget) {
+                // Coast to stop
+                this.velocity.x *= 0.85;
+                this.velocity.z *= 0.85;
+                this.velocity.y = 0;
                 this.desiredVelocity.set(0, 0, 0);
+                this.movementState = 'idle';
+                return;
             }
 
-            // Apply steering forces
-            this.calculateSteeringForce();
+            const toTarget = new THREE.Vector3(
+                this.currentTarget.x - this.bot.position.x,
+                0,
+                this.currentTarget.z - this.bot.position.z
+            );
+            const dist = toTarget.length();
 
-            // Update velocity
-            this.velocity.add(this.steeringForce.clone().multiplyScalar(deltaTime));
-            this.velocity.y = 0; // Ensure velocity remains strictly horizontal
+            if (dist < this.stoppingDistance) {
+                // Arrived — clear so next decision picks a new point
+                this.currentTarget = null;
+                this.velocity.multiplyScalar(0.5);
+                this.movementState = 'idle';
+                return;
+            }
 
-            // Limit velocity
+            if (dist < 0.0001) {
+                this.desiredVelocity.set(0, 0, 0);
+                return;
+            }
+
+            toTarget.normalize();
+            this.desiredVelocity.copy(toTarget).multiplyScalar(this.maxSpeed);
+
+            // Exponential approach toward desired velocity (frame-rate independent)
+            const t = 1 - Math.exp(-this.acceleration * deltaTime);
+            this.velocity.x += (this.desiredVelocity.x - this.velocity.x) * t;
+            this.velocity.z += (this.desiredVelocity.z - this.velocity.z) * t;
+            this.velocity.y = 0;
+
+            // Light separation from nearby bots so they don't stack
+            this.applySoftSeparation();
+
             if (this.velocity.length() > this.maxSpeed) {
-                this.velocity.normalize().multiplyScalar(this.maxSpeed);
+                this.velocity.setLength(this.maxSpeed);
             }
 
-            // Apply friction (much less aggressive)
-            this.velocity.multiplyScalar(0.98);
-
-            // Safety check for NaN values
             if (isNaN(this.velocity.x) || isNaN(this.velocity.z)) {
                 this.velocity.set(0, 0, 0);
                 console.warn(`Bot ${this.bot.id} velocity became NaN, resetting`);
+            }
+
+            this.movementState = 'moving';
+
+            if (window.DEBUG_BOT_MOVEMENT && Math.random() < 0.01) {
+                console.debug(`Bot ${this.bot.id} spd=${this.velocity.length().toFixed(2)} dist=${dist.toFixed(1)}`);
             }
         } catch (error) {
             console.error(`Bot ${this.bot.id} movement error:`, error);
             this.velocity.set(0, 0, 0);
         }
+    }
+
+    /**
+     * Soft push away from overlapping teammates (doesn't cancel seek)
+     */
+    applySoftSeparation() {
+        const others = this.getOtherBots();
+        const push = new THREE.Vector3();
+        for (const other of others) {
+            const dx = this.bot.position.x - other.position.x;
+            const dz = this.bot.position.z - other.position.z;
+            const d = Math.sqrt(dx * dx + dz * dz);
+            if (d > 0.01 && d < 2.0) {
+                const strength = (2.0 - d) / 2.0;
+                push.x += (dx / d) * strength * this.maxSpeed * 0.35;
+                push.z += (dz / d) * strength * this.maxSpeed * 0.35;
+            }
+        }
+        this.velocity.x += push.x * 0.15;
+        this.velocity.z += push.z * 0.15;
     }
     
     /**
@@ -211,18 +258,21 @@ export class BotMovement {
      */
     calculateAvoidanceForce() {
         const avoidanceForce = new THREE.Vector3(0, 0, 0);
+        if (this.velocity.lengthSq() < 0.01) return avoidanceForce;
+
         const lookAhead = this.velocity.clone().normalize().multiplyScalar(this.lookAheadDistance);
         const ahead = this.bot.position.clone().add(lookAhead);
-        
+
         for (const obstacle of this.obstacles) {
             const distance = ahead.distanceTo(obstacle.position);
             if (distance < obstacle.radius + this.avoidanceRadius) {
-                const avoidance = ahead.clone().sub(obstacle.position).normalize();
-                avoidance.multiplyScalar(this.maxSpeed);
+                const avoidance = ahead.clone().sub(obstacle.position);
+                if (avoidance.lengthSq() < 0.0001) continue;
+                avoidance.normalize().multiplyScalar(this.maxSpeed);
                 avoidanceForce.add(avoidance);
             }
         }
-        
+
         return avoidanceForce;
     }
     
@@ -369,19 +419,8 @@ export class BotMovement {
      * Apply movement to bot
      */
     applyMovement(deltaTime) {
-        // Set bot velocity from movement system
         this.bot.velocity.copy(this.velocity);
-        
-        
-        // Update rotation based on movement direction
-        if (this.velocity.length() > 0.1) {
-            const targetRotation = Math.atan2(this.velocity.x, this.velocity.z);
-            if (this.smoothMovement) {
-                this.bot.rotation.y = THREE.MathUtils.lerp(this.bot.rotation.y, targetRotation, this.rotationSmoothing);
-            } else {
-                this.bot.rotation.y = targetRotation;
-            }
-        }
+        // Facing is owned by BotBrain (face enemy / travel / patrol target)
     }
     
     /**
@@ -470,7 +509,7 @@ export class BotMovement {
             }
             
             // Check neighbors
-            const neighbors = this.getNeighbors(current);
+            const neighbors = this.getGridNeighbors(current);
             for (const neighbor of neighbors) {
                 if (closedSet.has(this.gridToString(neighbor))) {
                     continue;
@@ -515,23 +554,23 @@ export class BotMovement {
     }
     
     /**
-     * Get neighbors for pathfinding
+     * Get grid neighbors for pathfinding (A*)
      */
-    getNeighbors(gridPos) {
+    getGridNeighbors(gridPos) {
         const neighbors = [];
         const directions = [
             [-1, -1], [-1, 0], [-1, 1],
             [0, -1],           [0, 1],
             [1, -1],  [1, 0],  [1, 1]
         ];
-        
+
         for (const [dx, dz] of directions) {
             const neighbor = { x: gridPos.x + dx, z: gridPos.z + dz };
             if (this.isValidGridPosition(neighbor) && this.pathfindingGrid[neighbor.x][neighbor.z].walkable) {
                 neighbors.push(neighbor);
             }
         }
-        
+
         return neighbors;
     }
     
@@ -580,9 +619,10 @@ export class BotMovement {
      */
     gridToWorld(gridPos) {
         const offset = this.gridOffset || 100;
+        const y = this.bot?.position?.y ?? 1.0;
         return new THREE.Vector3(
             (gridPos.x - offset) * this.gridResolution,
-            0,
+            y,
             (gridPos.z - offset) * this.gridResolution
         );
     }
@@ -629,22 +669,22 @@ export class BotMovement {
     }
     
     /**
-     * Get neighbors for flocking
+     * Get nearby bots for flocking
      */
     getNeighbors() {
         const neighbors = [];
         const bots = this.getOtherBots();
-        
+
         for (const bot of bots) {
             const distance = this.bot.position.distanceTo(bot.position);
             if (distance < this.flockingRadius && bot.id !== this.bot.id) {
                 neighbors.push(bot);
             }
         }
-        
+
         return neighbors;
     }
-    
+
     /**
      * Get object radius
      */
@@ -653,23 +693,22 @@ export class BotMovement {
             const box = obj.geometry.boundingBox;
             return Math.max(box.max.x - box.min.x, box.max.z - box.min.z) / 2;
         }
-        return 1.0; // Default radius
+        return 1.0;
     }
-    
+
     /**
      * Get game objects
      */
     getGameObjects() {
-        // This would integrate with the game's scene system
-        return [];
+        return this.bot.game?.scene?.children || [];
     }
-    
+
     /**
      * Get other bots
      */
     getOtherBots() {
-        // This would integrate with the game's bot system
-        return [];
+        const all = this.bot.game?.getBots?.() || [];
+        return all.filter(b => b.id !== this.bot.id && b.isAlive);
     }
     
     /**
@@ -852,34 +891,27 @@ export class BotMovement {
      * Execute patrol movement
      */
     executePatrol(situation) {
-        // Only set new target if we don't have one or we're close to current target
         if (!this.currentTarget) {
-            // Find a random patrol point within the arena
             const patrolPoint = this.findPatrolPoint();
-            if (patrolPoint) {
-                this.setTarget(patrolPoint);
-            }
-        } else {
-            // Check if we're close to current target
-            const distance = this.bot.position.distanceTo(this.currentTarget);
-            if (distance < this.stoppingDistance * 2) { // Use 2x stopping distance for patrol
-                // Find a new patrol point
-                const patrolPoint = this.findPatrolPoint();
-                if (patrolPoint) {
-                    this.setTarget(patrolPoint);
-                }
-            }
+            if (patrolPoint) this.setTarget(patrolPoint);
+            return;
+        }
+
+        const distance = this.horizontalDistance(this.bot.position, this.currentTarget);
+        if (distance < this.stoppingDistance * 2) {
+            const patrolPoint = this.findPatrolPoint();
+            if (patrolPoint) this.setTarget(patrolPoint);
         }
     }
-    
+
     /**
      * Execute hunt movement (move towards enemies)
      */
     executeHunt(situation) {
-        if (situation.enemies && situation.enemies.length > 0) {
-            const nearestEnemy = situation.enemies[0]; // Assuming sorted by distance
-            const huntPosition = this.calculateHuntPosition(nearestEnemy);
-            this.setTarget(huntPosition);
+        const enemies = situation.enemies || [];
+        if (enemies.length > 0 && enemies[0].position) {
+            const huntPosition = this.calculateHuntPosition(enemies[0]);
+            if (huntPosition) this.setTarget(huntPosition);
         } else {
             this.executePatrol(situation);
         }
@@ -938,45 +970,46 @@ export class BotMovement {
      * Find a random patrol point
      */
     findPatrolPoint() {
-        // Generate random position within arena bounds (assuming 100x100 arena)
-        // Use more strategic patrol points based on game situation
-        const x = (Math.random() - 0.5) * 80; // Keep within bounds
+        const y = this.bot.position.y || 1.0;
+        const x = (Math.random() - 0.5) * 80;
         const z = (Math.random() - 0.5) * 80;
 
-        // Add some tactical variation based on bot personality
         const personality = this.bot.personality;
         if (personality) {
-            // More aggressive bots patrol closer to center
             const aggression = personality.getEffectiveAggression();
-            const centerBias = aggression * 0.3;
-
-            // More cautious bots patrol closer to edges
             const caution = personality.getEffectiveCaution();
+            const centerBias = aggression * 0.3;
             const edgeBias = caution * 0.2;
 
-            // Apply biases to patrol position
             const centerX = x * (1 - centerBias);
             const centerZ = z * (1 - centerBias);
             const edgeX = x * (1 + edgeBias);
             const edgeZ = z * (1 + edgeBias);
 
-            // Combine biases based on personality
             const finalX = centerX * (1 - edgeBias) + edgeX * edgeBias;
             const finalZ = centerZ * (1 - edgeBias) + edgeZ * edgeBias;
 
-            return new THREE.Vector3(finalX, 0, finalZ);
+            return new THREE.Vector3(finalX, y, finalZ);
         }
 
-        return new THREE.Vector3(x, 0, z);
+        return new THREE.Vector3(x, y, z);
     }
     
     /**
      * Calculate hunt position (approach enemy but maintain distance)
      */
     calculateHuntPosition(enemy) {
-        const direction = enemy.position.clone().sub(this.bot.position).normalize();
-        const approachDistance = 8.0; // Maintain some distance
-        return enemy.position.clone().sub(direction.multiplyScalar(approachDistance));
+        if (!enemy || !enemy.position) return null;
+        const direction = enemy.position.clone().sub(this.bot.position);
+        direction.y = 0;
+        if (direction.lengthSq() < 0.0001) {
+            return enemy.position.clone();
+        }
+        direction.normalize();
+        const approachDistance = 8.0;
+        const pos = enemy.position.clone().sub(direction.multiplyScalar(approachDistance));
+        pos.y = this.bot.position.y;
+        return pos;
     }
     
     /**

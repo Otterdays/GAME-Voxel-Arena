@@ -5,6 +5,7 @@ import { MapPreview } from '../world/mapPreview.js';
 import { createArena1 } from '../world/arena1.js';
 import { createArena2 } from '../world/arena2.js';
 import { CustomDropdown, CustomSlider, createValueFormatter } from './customComponents.js';
+import { BUILD_VERSION, renderVersionBriefing } from './versionBriefing.js';
 
 const ui = {
     container: document.getElementById('ui-container'),
@@ -85,12 +86,12 @@ function showCustomCursor() {
         ui.customCursor.style.setProperty('display', 'block', 'important');
         ui.customCursor.style.setProperty('position', 'fixed', 'important');
         ui.customCursor.style.setProperty('z-index', '999999', 'important');
-        ui.customCursor.style.setProperty('background-color', 'rgba(255, 255, 255, 0.9)', 'important');
-        ui.customCursor.style.setProperty('border', '2px solid #00ff00', 'important');
-        ui.customCursor.style.setProperty('width', '20px', 'important');
-        ui.customCursor.style.setProperty('height', '20px', 'important');
-        ui.customCursor.style.setProperty('border-radius', '50%', 'important');
-        ui.customCursor.style.setProperty('box-shadow', '0 0 10px rgba(0, 255, 0, 0.5)', 'important');
+        ui.customCursor.style.setProperty('background-color', 'rgba(196, 163, 90, 0.35)', 'important');
+        ui.customCursor.style.setProperty('border', '2px solid #c4a35a', 'important');
+        ui.customCursor.style.setProperty('width', '18px', 'important');
+        ui.customCursor.style.setProperty('height', '18px', 'important');
+        ui.customCursor.style.setProperty('border-radius', '0', 'important');
+        ui.customCursor.style.setProperty('box-shadow', 'none', 'important');
     } else {
         console.error('showCustomCursor: ui.customCursor is null or undefined');
     }
@@ -115,6 +116,7 @@ export function updateCustomCursorPosition(x, y) {
 }
 
 function showMenu(menuId) {
+    closeVersionModal();
     [ui.startMenu, ui.settingsMenu, ui.pauseMenu, ui.mapSelectionMenu, ui.avatarMenu].forEach(menu => {
         if (menu && menu.id === menuId) {
             menu.classList.add('active');
@@ -705,6 +707,8 @@ export function initUI(callbacks) {
         quitBtn.addEventListener('click', () => window.location.href = 'home.html');
     }
 
+    initVersionModal();
+
     const avatarBackBtn = document.getElementById('avatar-back-button');
     if (avatarBackBtn) {
         avatarBackBtn.addEventListener('click', () => showMenu('start-menu'));
@@ -869,6 +873,62 @@ function ensurePauseMenuInCorrectLocation() {
         uiContainer.appendChild(pauseMenu);
         console.log('Fixed: Moved pause menu to ui-container');
     }
+}
+
+function openVersionModal() {
+    const modal = document.getElementById('version-modal');
+    const body = document.getElementById('version-briefing-body');
+    if (!modal) return;
+    renderVersionBriefing(body);
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeVersionModal() {
+    const modal = document.getElementById('version-modal');
+    if (!modal) return;
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+}
+
+function initVersionModal() {
+    const label = document.getElementById('build-version-label');
+    if (label) {
+        label.textContent = BUILD_VERSION;
+    }
+
+    const openBtn = document.getElementById('version-open-button');
+    if (openBtn) {
+        openBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openVersionModal();
+        });
+    }
+
+    const closeBtn = document.getElementById('version-close-button');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeVersionModal();
+        });
+    }
+
+    const modal = document.getElementById('version-modal');
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeVersionModal();
+            }
+        });
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal?.classList.contains('open')) {
+            e.stopPropagation();
+            closeVersionModal();
+        }
+    }, true);
 }
 
 export const UIManager = {

@@ -3,17 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voxel Arena</title>
-    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+    <title>Voxel Arena — SpecOps</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23141a12' width='100' height='100'/><text y='.72em' x='50%' text-anchor='middle' font-size='52' fill='%23c4a35a' font-family='sans-serif' font-weight='700'>VA</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    
+
     <!-- Preload critical resources -->
     <link rel="preload" href="assets/audio/main.wav" as="fetch" crossorigin>
     <link rel="preload" href="style.css" as="style">
-    
+
     <!-- Resource hints -->
-    <meta name="theme-color" content="#00ff00">
-    <meta name="description" content="Voxel Arena - Browser-based 3D FPS">
+    <meta name="theme-color" content="#141a12">
+    <meta name="description" content="Voxel Arena — nostalgic SpecOps FPS. SOCOM / Clancy-inspired tactics in the browser.">
 </head>
 <body>
     <canvas id="game-canvas"></canvas>
@@ -25,18 +28,85 @@
 
     <!-- UI Menus -->
     <div id="ui-container">
-        <!-- Start Menu -->
-        <div id="start-menu" class="menu active">
-            <h1>Voxel Arena</h1>
-            <button id="single-player-button">Single Player</button>
-            <button id="multiplayer-button">Multiplayer</button>
-            <button id="settings-button">Settings</button>
-            <button id="avatar-button">Avatar</button>
-            <button id="quit-button">Quit</button>
-            
-            <!-- Floating Logo -->
+        <!-- Start Menu — SpecOps briefing -->
+        <div id="start-menu" class="menu active tac-screen">
+            <div class="tac-scanlines" aria-hidden="true"></div>
+            <div class="tac-briefing">
+                <header class="tac-header">
+                    <div class="tac-classif">
+                        <span>CLASSIFIED</span>
+                        <span class="tac-sep">//</span>
+                        <span>CLEARANCE ALPHA</span>
+                    </div>
+                    <p class="tac-op-label">OPERATION</p>
+                    <h1 class="tac-brand">VOXEL ARENA</h1>
+                    <p class="tac-tagline">Special Operations Command — Fireteam Ready</p>
+                    <button type="button" id="version-open-button" class="tac-build-btn" title="Open intel briefing">
+                        BUILD <span id="build-version-label">0.47</span>
+                    </button>
+                </header>
+
+                <nav class="tac-ops" aria-label="Main operations">
+                    <button type="button" id="single-player-button" class="tac-op-btn primary">
+                        <span class="tac-op-id">01</span>
+                        <span class="tac-op-text">
+                            <span class="tac-op-title">Deploy</span>
+                            <span class="tac-op-sub">Single Player</span>
+                        </span>
+                    </button>
+                    <button type="button" id="multiplayer-button" class="tac-op-btn" disabled title="Coming online">
+                        <span class="tac-op-id">02</span>
+                        <span class="tac-op-text">
+                            <span class="tac-op-title">NetOps</span>
+                            <span class="tac-op-sub">Multiplayer — Offline</span>
+                        </span>
+                    </button>
+                    <button type="button" id="settings-button" class="tac-op-btn">
+                        <span class="tac-op-id">03</span>
+                        <span class="tac-op-text">
+                            <span class="tac-op-title">Loadout</span>
+                            <span class="tac-op-sub">Settings</span>
+                        </span>
+                    </button>
+                    <button type="button" id="avatar-button" class="tac-op-btn">
+                        <span class="tac-op-id">04</span>
+                        <span class="tac-op-text">
+                            <span class="tac-op-title">Operator</span>
+                            <span class="tac-op-sub">Avatar</span>
+                        </span>
+                    </button>
+                    <button type="button" id="quit-button" class="tac-op-btn danger">
+                        <span class="tac-op-id">05</span>
+                        <span class="tac-op-text">
+                            <span class="tac-op-title">Abort</span>
+                            <span class="tac-op-sub">Quit to Desktop</span>
+                        </span>
+                    </button>
+                </nav>
+
+                <footer class="tac-footer">
+                    <span>FIRETEAM STATUS: STANDBY</span>
+                    <span class="tac-sep">|</span>
+                    <span>PRESS DEPLOY TO CONTINUE</span>
+                </footer>
+            </div>
+
             <div id="floating-logo" class="floating-logo">
-                <img src="assets/main.png" alt="Voxel Arena Logo" />
+                <img src="assets/main.png" alt="Voxel Arena" />
+            </div>
+        </div>
+
+        <!-- Version / Intel Briefing Modal -->
+        <div id="version-modal" class="tac-modal" aria-hidden="true" role="dialog" aria-labelledby="version-modal-title">
+            <div class="tac-modal-panel">
+                <header class="tac-modal-head">
+                    <div>
+                        <p class="tac-op-label">INTEL BRIEFING</p>
+                        <h2 id="version-modal-title">BUILD NOTES</h2>
+                    </div>
+                    <button type="button" id="version-close-button" class="tac-modal-close">CLOSE</button>
+                </header>
+                <div id="version-briefing-body" class="tac-modal-body"></div>
             </div>
         </div>
 
@@ -293,14 +363,31 @@
 
         <!-- Pause Menu -->
         <div id="pause-menu" class="menu">
-            <h2>Paused</h2>
-            <button id="resume-button">Resume</button>
-            <button id="quit-to-main-menu-button">Main Menu</button>
+            <p class="tac-op-label">MISSION HOLD</p>
+            <h2>PAUSED</h2>
+            <button id="resume-button">Resume Op</button>
+            <button id="quit-to-main-menu-button">Abort to Menu</button>
         </div>
 
         <!-- HUD -->
         <div id="hud">
+            <div id="damage-vignette"></div>
             <div id="crosshair">+</div>
+            <div id="hitmarker"></div>
+            <div id="hud-bottom">
+                <div id="hud-health">
+                    <span class="hud-label">HP</span>
+                    <div class="hud-bar"><div id="health-fill"></div></div>
+                    <span id="health-text">100</span>
+                </div>
+                <div id="hud-center-stats">
+                    <span id="hud-kills">Kills: 0</span>
+                </div>
+                <div id="hud-ammo">
+                    <span id="ammo-text">30</span>
+                    <span class="hud-label">/ 30</span>
+                </div>
+            </div>
         </div>
 
     </div>

@@ -11,7 +11,7 @@
 
 <div align="center">
 
-[![Version](https://img.shields.io/badge/version-0.37-brightgreen.svg?style=for-the-badge&logo=github)](https://github.com/AfyKirby1/Voxel-Arena)
+[![Version](https://img.shields.io/badge/version-0.46-brightgreen.svg?style=for-the-badge&logo=github)](https://github.com/AfyKirby1/Voxel-Arena)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge&logo=opensourceinitiative)](LICENSE)
 [![JavaScript](https://img.shields.io/badge/language-JavaScript-yellow.svg?style=for-the-badge&logo=javascript)](https://javascript.info/)
 [![Three.js](https://img.shields.io/badge/engine-Three.js-orange.svg?style=for-the-badge&logo=threedotjs)](https://threejs.org/)
@@ -58,10 +58,11 @@ python -m http.server 8000
 | Feature | Description | Status |
 |---------|-------------|--------|
 | 🏃 **Smooth FPS Controls** | WASD movement with precise mouse look | ✅ |
-| ⚔️ **Tactical Combat** | Jump, strafe, and shoot in arena environments | ✅ |
+| ⚔️ **Tactical Combat** | Jump, strafe, shoot, reload, die/respawn | ✅ |
+| ❤️ **Combat HUD** | HP, ammo, kills, hitmarkers, damage flash | ✅ |
 | 🗺️ **Two Unique Maps** | Classic Arena and Big Arena with different layouts | ✅ |
-| 🔫 **Weapon System** | Realistic gun mechanics with procedural audio | ✅ |
-| 🤖 **AI Bots** | Intelligent computer opponents with physics and combat | ✅ |
+| 🔫 **Weapon System** | FP Glock + tracers + procedural audio | ✅ |
+| 🤖 **AI Bots** | Lean chase/face/shoot AI with team-safe hits | ✅ |
 
 </div>
 
@@ -98,6 +99,7 @@ python -m http.server 8000
 | **Look** | `Mouse` | Aim your weapon |
 | **Jump** | `Space` | Leap over obstacles |
 | **Shoot** | `Left Click` | Fire your weapon |
+| **Reload** | `R` | Reload magazine (also auto on empty) |
 | **Pause** | `Escape` | Pause the game |
 
 *All controls are fully customizable in Settings* ⚙️

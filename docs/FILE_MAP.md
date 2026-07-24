@@ -1,8 +1,12 @@
 # Voxel Arena - Complete File Map & Module Reference
 
-**Version**: 0.37  
-**Last Updated**: December 2024  
+<!-- PRESERVATION RULE: Never delete or replace content. Append or annotate only. -->
+
+**Version**: 0.46  
+**Last Updated**: 2026-07-24  
 **Purpose**: Comprehensive file location guide for AI systems and developers
+
+> [AMENDED 2026-07-24]: Was 0.37 / December 2024. Combat HUD lives in `game/index.html` + `game/style.css`; hit/owner logic in `core/main.js`; reload in `core/input.js`; death/respawn in `player/player.js`. Module tree below unchanged.
 
 ---
 

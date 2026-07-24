@@ -207,41 +207,48 @@ function removeShowcaseItem(itemType) {
 }
 
 function createShowcaseGun() {
-    // Create a gun model similar to the Glock class but for showcase
-    const gunGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.5);
-    const gunMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
-    const gunMesh = new THREE.Mesh(gunGeometry, gunMaterial);
-    
-    // Position the gun in the character's hand area
-    gunMesh.position.set(0.2, -0.2, -0.4);
-    
-    // Add gun details for better showcase
-    const barrelGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.3, 8);
-    const barrelMaterial = new THREE.MeshStandardMaterial({ color: 0x111111 });
-    const barrel = new THREE.Mesh(barrelGeometry, barrelMaterial);
-    barrel.position.set(0, 0, -0.4);
+    // Match in-game procedural glock silhouette for avatar preview
+    const gun = new THREE.Group();
+
+    const steel = new THREE.MeshStandardMaterial({
+        color: 0x2a2a2e, roughness: 0.35, metalness: 0.85
+    });
+    const dark = new THREE.MeshStandardMaterial({
+        color: 0x141416, roughness: 0.4, metalness: 0.9
+    });
+    const polymer = new THREE.MeshStandardMaterial({
+        color: 0x1c1c1c, roughness: 0.75, metalness: 0.15
+    });
+
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.08, 0.28), steel);
+    frame.position.set(0, 0, -0.05);
+    gun.add(frame);
+
+    const slide = new THREE.Mesh(new THREE.BoxGeometry(0.058, 0.055, 0.30), dark);
+    slide.position.set(0, 0.045, -0.08);
+    gun.add(slide);
+
+    const barrel = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.012, 0.014, 0.14, 10),
+        dark
+    );
     barrel.rotation.x = Math.PI / 2;
-    gunMesh.add(barrel);
+    barrel.position.set(0, 0.035, -0.30);
+    gun.add(barrel);
 
-    // Add trigger guard
-    const triggerGuardGeometry = new THREE.TorusGeometry(0.08, 0.02, 8, 16, Math.PI);
-    const triggerGuardMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
-    const triggerGuard = new THREE.Mesh(triggerGuardGeometry, triggerGuardMaterial);
-    triggerGuard.position.set(0, -0.05, -0.1);
-    triggerGuard.rotation.x = Math.PI / 2;
-    gunMesh.add(triggerGuard);
+    const grip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.14, 0.09), polymer);
+    grip.position.set(0, -0.09, 0.06);
+    grip.rotation.x = 0.18;
+    gun.add(grip);
 
-    // Add grip texture
-    const gripGeometry = new THREE.BoxGeometry(0.08, 0.15, 0.3);
-    const gripMaterial = new THREE.MeshStandardMaterial({ color: 0x444444 });
-    const grip = new THREE.Mesh(gripGeometry, gripMaterial);
-    grip.position.set(0, -0.1, 0.1);
-    gunMesh.add(grip);
+    const mag = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 0.07), polymer);
+    mag.position.set(0, -0.16, 0.05);
+    gun.add(mag);
 
-    // Make sure the gun is visible
-    gunMesh.visible = true;
-    
-    return gunMesh;
+    gun.position.set(0.45, 0.55, 0.15);
+    gun.rotation.y = Math.PI / 2;
+    gun.visible = true;
+    return gun;
 }
 
 function updateShowcaseItemStyle(itemType, property, value) {
@@ -250,7 +257,11 @@ function updateShowcaseItemStyle(itemType, property, value) {
 
     switch (property) {
         case 'color':
-            itemData.mesh.material.color.setHex(value.replace('#', '0x'));
+            itemData.mesh.traverse((child) => {
+                if (child.isMesh && child.material && child.material.color) {
+                    child.material.color.setHex(value.replace('#', '0x'));
+                }
+            });
             itemData.originalColor = value;
             break;
         case 'scale':

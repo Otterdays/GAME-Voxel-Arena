@@ -157,39 +157,36 @@ export class BotCombat {
      */
     calculateTargetScore(enemy) {
         let score = 0;
-        
-        // Distance factor (closer = higher priority)
-        const distance = this.bot.position.distanceTo(enemy.position);
+        const pos = enemy.position;
+        if (!pos) return 0;
+
+        const distance = this.bot.position.distanceTo(pos);
         score += Math.max(0, 1 - (distance / this.engagementRange));
-        
-        // Threat level factor
+
         if (enemy.threatLevel) {
             score += enemy.threatLevel * 0.3;
         }
-        
-        // Health factor (lower health = higher priority)
-        if (enemy.health) {
-            score += (1 - enemy.health) * 0.2;
+
+        const health = enemy.health ?? enemy.target?.health;
+        if (health !== undefined) {
+            // Normalize if health looks like 0-100
+            const ratio = health > 1.5 ? health / 100 : health;
+            score += (1 - ratio) * 0.2;
         }
-        
-        // Weapon factor (better weapon = higher priority)
+
         if (enemy.weapon) {
-            score += enemy.weapon.damage * 0.1;
+            score += (enemy.weapon.damage ?? 0) * 0.1;
         }
-        
-        // Visibility factor
+
         if (enemy.confidence) {
             score += enemy.confidence * 0.2;
         }
-        
-        // Team factor (targeting allies = higher priority)
+
         if (enemy.targetingAllies) {
             score += 0.3;
         }
-        
-        // Aggression modifier
+
         score *= this.aggression;
-        
         return Math.max(0, Math.min(1, score));
     }
     
@@ -197,25 +194,38 @@ export class BotCombat {
      * Switch to a new target
      */
     switchTarget(newTarget) {
-        // Safety check - ensure target is valid and has position
-        if (!newTarget || !newTarget.position) {
+        // Flatten observation wrappers so position/health are always on the target
+        let target = newTarget;
+        if (newTarget && newTarget.target && newTarget.position) {
+            target = {
+                id: newTarget.target.id || newTarget.id,
+                position: newTarget.position.clone
+                    ? newTarget.position.clone()
+                    : new THREE.Vector3().copy(newTarget.position),
+                health: newTarget.target.health ?? newTarget.health ?? 100,
+                team: newTarget.target.team ?? newTarget.team,
+                mesh: newTarget.target.mesh ?? newTarget.mesh,
+                threatLevel: newTarget.threatLevel,
+                confidence: newTarget.confidence
+            };
+        }
+
+        if (!target || !target.position) {
             console.warn(`BotCombat.switchTarget: Invalid target provided`, newTarget);
             return;
         }
-        
-        // Record previous target
+
         if (this.currentTarget) {
             this.recordTargetEngagement(this.currentTarget, false);
         }
-        
-        // Set new target
-        this.currentTarget = newTarget;
-        this.aimingTarget = newTarget.position.clone();
-        
-        // Record new target engagement
-        this.recordTargetEngagement(newTarget, true);
-        
-        // Update combat state
+
+        this.currentTarget = target;
+        this.aimingTarget = target.position.clone
+            ? target.position.clone()
+            : new THREE.Vector3(target.position.x, target.position.y, target.position.z);
+        this.targetAcquiredTime = Date.now();
+
+        this.recordTargetEngagement(target, true);
         this.combatState = 'engaging';
     }
     
@@ -224,54 +234,70 @@ export class BotCombat {
      */
     updateAiming(deltaTime) {
         if (!this.currentTarget || !this.aimingTarget) return;
-        
-        // Calculate desired aim direction
-        const desiredDirection = this.aimingTarget.clone().sub(this.bot.position).normalize();
-        
-        // Apply aiming accuracy
+        if (!this.aimingTarget || isNaN(this.aimingTarget.x)) return;
+
+        const aimPos = this.currentTarget.position || this.aimingTarget;
+        if (!aimPos || isNaN(aimPos.x)) return;
+
+        this.aimingTarget.copy(aimPos);
+
+        const desiredDirection = this.aimingTarget.clone().sub(this.bot.position);
+        desiredDirection.y = 0;
+        if (desiredDirection.lengthSq() < 0.0001) return;
+        desiredDirection.normalize();
+
         const accuracyModifier = this.calculateAccuracyModifier();
         this.aimingOffset = this.calculateAimingOffset(accuracyModifier);
-        
-        // Apply offset to aim direction
+
         const finalDirection = desiredDirection.clone().add(this.aimingOffset);
-        
-        // Update bot rotation to face target
-        const targetRotation = Math.atan2(finalDirection.x, finalDirection.z);
-        this.bot.rotation.y = THREE.MathUtils.lerp(this.bot.rotation.y, targetRotation, this.reactionTime * deltaTime);
-        
-        // Check if ready to fire
+        if (finalDirection.lengthSq() < 0.0001 || isNaN(finalDirection.x)) return;
+        finalDirection.normalize();
+
+        // Three.js forward is -Z → use atan2(-x, -z)
+        const targetRotation = Math.atan2(-finalDirection.x, -finalDirection.z);
+        if (isNaN(targetRotation)) return;
+
+        const lerpFactor = Math.min(1, Math.max(0, this.reactionTime * deltaTime * 2));
+        // Don't fight locomotion facing while sprinting toward/away
+        const movingFast = this.bot.velocity && this.bot.velocity.length() > 1.5;
+        if (!movingFast) {
+            const nextY = THREE.MathUtils.lerp(this.bot.rotation.y, targetRotation, lerpFactor);
+            if (!isNaN(nextY)) {
+                this.bot.rotation.y = nextY;
+            }
+        }
+
         if (this.isReadyToFire()) {
             this.fireWeapon();
         }
     }
-    
+
     /**
      * Calculate accuracy modifier based on various factors
      */
     calculateAccuracyModifier() {
-        let modifier = this.accuracy;
-        
-        // Distance modifier
-        if (this.currentTarget) {
+        let modifier = this.accuracy || 0.6;
+
+        if (this.currentTarget && this.currentTarget.position) {
             const distance = this.bot.position.distanceTo(this.currentTarget.position);
             modifier *= Math.max(0.3, 1 - (distance / this.engagementRange));
         }
-        
-        // Movement modifier
+
         if (this.bot.velocity && this.bot.velocity.length() > 0.1) {
-            modifier *= 0.7; // Less accurate while moving
+            modifier *= 0.7;
         }
-        
-        // Health modifier
-        if (this.bot.health < 0.5) {
-            modifier *= 0.8; // Less accurate when injured
+
+        // Bot health is 0-100; normalize
+        const healthRatio = this.bot.health / (this.bot.maxHealth || 100);
+        if (healthRatio < 0.5) {
+            modifier *= 0.8;
         }
-        
-        // Weapon modifier
+
         if (this.currentWeapon) {
-            modifier *= this.currentWeapon.accuracy;
+            modifier *= (this.currentWeapon.accuracy ?? 1);
         }
-        
+
+        if (isNaN(modifier)) modifier = 0.5;
         return Math.max(0.1, Math.min(1, modifier));
     }
     
@@ -291,54 +317,75 @@ export class BotCombat {
      */
     isReadyToFire() {
         if (!this.currentTarget || !this.currentWeapon) return false;
-        
-        // Check if weapon is ready
+
         if (this.currentWeapon.ammo === 0) return false;
-        if (this.currentWeapon.reloadTime > 0) return false;
-        
-        // Check if target is in range
+        if (this.currentWeapon.isReloading) return false;
+
+        const now = Date.now();
+        if (now - (this.currentWeapon.lastFireTime || 0) < (this.currentWeapon.fireRate || 0.15) * 1000) {
+            return false;
+        }
+
+        if (!this.currentTarget.position) return false;
         const distance = this.bot.position.distanceTo(this.currentTarget.position);
         if (distance > this.engagementRange) return false;
-        
-        // Check if target is visible
+
+        // Use flattened target or original observation for LOS
         if (!this.brain.senses.canSeeTarget(this.currentTarget)) return false;
-        
-        // Check reaction time
-        const timeSinceTargetAcquired = Date.now() - this.targetAcquiredTime;
+
+        const timeSinceTargetAcquired = now - (this.targetAcquiredTime || 0);
         if (timeSinceTargetAcquired < this.reactionTime * 1000) return false;
-        
+
         return true;
     }
-    
+
     /**
      * Fire weapon at current target
      */
     fireWeapon() {
-        if (!this.currentWeapon || !this.currentTarget) return;
-        
-        // Calculate fire direction
-        const fireDirection = this.aimingTarget.clone().sub(this.bot.position).normalize();
-        fireDirection.add(this.aimingOffset);
-        
-        // Fire weapon
+        if (!this.currentWeapon || !this.currentTarget || !this.aimingTarget) return;
+
+        const fireDirection = this.aimingTarget.clone().sub(this.bot.position);
+        fireDirection.y += 1.0; // Aim toward torso
+        if (this.aimingOffset) {
+            fireDirection.add(this.aimingOffset);
+        }
+        if (fireDirection.lengthSq() < 0.0001 || isNaN(fireDirection.x)) return;
+        fireDirection.normalize();
+
         this.currentWeapon.fire(fireDirection);
-        
-        // Update statistics
         this.shotsFired++;
-        
-        // Check if hit
+
         if (this.checkHit(this.currentTarget)) {
             this.shotsHit++;
-            this.damageDealt += this.currentWeapon.damage;
-            
-            // Check if target is eliminated
-            if (this.currentTarget.health <= 0) {
+            const dmg = this.currentWeapon.damage ?? 20;
+            this.damageDealt += dmg;
+
+            // Apply damage to actual bot entity if known
+            const targetId = this.currentTarget.id;
+            if (targetId && targetId !== 'player') {
+                const bots = this.bot.game.getBots?.() || [];
+                const hitBot = bots.find(b => b.id === targetId);
+                if (hitBot && hitBot.takeDamage) {
+                    hitBot.takeDamage(dmg, this.bot);
+                }
+            } else if (targetId === 'player' && this.bot.game.player) {
+                if (this.bot.game.player.takeDamage) {
+                    this.bot.game.player.takeDamage(dmg, this.bot);
+                } else {
+                    this.bot.game.player.health = Math.max(
+                        0,
+                        (this.bot.game.player.health || 1) - dmg / 100
+                    );
+                }
+            }
+
+            if (this.currentTarget.health !== undefined && this.currentTarget.health <= 0) {
                 this.kills++;
                 this.recordKill(this.currentTarget);
             }
         }
-        
-        // Record shot
+
         this.recordShot(this.currentTarget, fireDirection);
     }
     
@@ -424,18 +471,11 @@ export class BotCombat {
     }
     
     /**
-     * Update tactical positioning
+     * Update tactical positioning — defer to movement decisions to avoid fight/jerk
      */
     updateTacticalPositioning(deltaTime) {
-        if (!this.currentTarget) return;
-        
-        // Determine optimal position
-        const optimalPosition = this.calculateOptimalPosition();
-        
-        // Move to optimal position
-        if (optimalPosition) {
-            this.brain.movement.moveTo(optimalPosition);
-        }
+        // Disabled continuous repositioning — BotMovement hunt/patrol owns targets
+        return;
     }
     
     /**
@@ -573,16 +613,17 @@ export class BotCombat {
      * Record target engagement
      */
     recordTargetEngagement(target, engaged) {
-        if (!this.targetHistory.has(target.id)) {
-            this.targetHistory.set(target.id, {
+        const id = target?.id ?? 'unknown';
+        if (!this.targetHistory.has(id)) {
+            this.targetHistory.set(id, {
                 target,
                 engagements: [],
                 totalDamage: 0,
                 kills: 0
             });
         }
-        
-        const history = this.targetHistory.get(target.id);
+
+        const history = this.targetHistory.get(id);
         history.engagements.push({
             engaged,
             timestamp: Date.now(),

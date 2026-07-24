@@ -1,21 +1,69 @@
+<!-- PRESERVATION RULE: Never delete or replace content. Append or annotate only. -->
+
 # Scratchpad - Development Notes & Progress Tracking
 
-**Last Updated**: December 2024  
-**Current Version**: 0.38  
-**Status**: Phase 1 Complete + Desktop Arena Builder + Critical Bug Fixes + Ground Texture Implementation
+**Last Updated**: 2026-07-24  
+**Current Version**: 0.47  
+**Status**: SpecOps UI — SOCOM / Clancy millennial briefing aesthetic
+
+---
+
+## 📝 **Last Actions**
+
+### 2026-07-24 — Refactor audit suite + LOC baseline
+- Added `scripts/refactor_audit.py` (+ `scripts/audit.bat`) — checks AGENTS.md limits (file≤400, func≤50, line≤100)
+- Snapshot written to `docs/REFACTOR_AUDIT.md`
+- **Baseline**: 31 files · **14,407 LOC** · 12 over file limit · 14 with oversized funcs
+- Hotspots: `style.css` (2301), bot stack (`Bot.js` 1116, `BotMovement.js` 1073, …), `ui.js` (946), `main.js` (728); worst funcs `main.update` 146L, `glock.buildGun` 145L
+- **Out-of-Scope**: not splitting those files in this pass — audit-only; STYLE_GUIDE still absent
+
+### 2026-07-24 — Root `AGENTS.md` created
+- Added agent instructions at repo root (was missing; prior sessions only searched for it)
+- Covers: init doc order, launch commands, module map, standards, docs preservation, git, boundaries, gotchas 0.40–0.47, manual verify checklist
+- Aligned to **0.47** SpecOps UI + combat loop status
+- **Out-of-Scope Observations**: `docs/STYLE_GUIDE.md` still absent — conventions live in `AGENTS.md` until STYLE_GUIDE is written
 
 ---
 
 ## 🚀 **Current Status Summary**
 
-### ✅ **Phase 1 Complete**
-- **Core Gameplay**: Full single-player FPS with physics, weapons, and AI bots
-- **AI Bot System**: Fully functional with 9-module BotBrain system
-- **UI System**: Custom components, cursor system, and responsive design
-- **Technical Architecture**: 25 modular components (19 core + 6 supporting) with clean separation
-- **Documentation**: Comprehensive documentation suite
+### ✅ **0.47 — SpecOps UI / version intel**
+- Homescreen = classified briefing (brand hero, numbered ops, BUILD stamp)
+- Version modal = INTEL BRIEFING with codenamed notes
+- Palette: olive / brass / muted text (no neon Matrix green)
+- Docs: CHANGELOG created; SUMMARY + SCRATCHPAD bumped
+
+### ✅ **0.46 — Combat feel / FPS loop**
+- **HUD**: HP bar, ammo, kill counter, damage vignette, hitmarkers
+- **Reload**: R key wired (+ auto-reload when empty)
+- **Death**: Player dies / respawns after 3s at team spawn
+- **Hits**: Team-safe bullets, body-center + swept hit tests, bots can wound player
+
+### ✅ **0.45 — Touchpad / laptop input hardening**
+- Clamp per-event + per-frame look deltas (kills precision-touchpad spikes)
+- Clear stuck WASD on blur / tab-hide / pointer-lock loss
+- Ignore look for ~80ms after lock; block two-finger wheel while locked
+- Mouse sensitivity setting actually applied in player look
+
+### ✅ **0.44 — Glock model cohesion**
+- Rebuilt FP pistol with overlapping flush volumes (no floating rail slabs)
+- Slide serrations inset on sides; integrated sights; box trigger guard + mag
+- Material contrast (slide / frame / polymer) so silhouette reads under flat light
+
+### ✅ **0.43 — Combat AI + FPS controls polish**
+- **Bot AI**: Lean chase/face/shoot FSM (replaces decision-tree thrash)
+- **Viewmodel**: Near-plane + position fix; team color no longer paints gun red
+- **Player move**: World-space camera quaternion (fixes 180° feel)
 
 ### 🎯 **Recent Major Achievements**
+- **SpecOps UI (2026-07-24)**: SOCOM/Clancy homescreen + version intel modal
+- **Combat feel (2026-07-24)**: Real damage loop — shoot enemies, take fire, reload, score kills
+- **Touchpad input (2026-07-24)**: Spike clamp + stuck-key clear for laptop WASD+trackpad
+- **Glock cohesion (2026-07-24)**: Overlapping geometry; recessed serrations; connected guard
+- **AI + viewmodel (2026-07-24)**: Bots face targets and shoot; gun no longer clipped/red; WASD matches look
+- **Bot movement feel (2026-07-24)**: Fixed crawl/jitter — removed double friction, accel lerp seek
+- **FPS visual polish (2026-07-24)**: Arm+Glock viewmodel; tracer bullets
+- **Bot vanish fix (2026-07-24)**: NaN rotation from missing weapon.accuracy
 - **Desktop Arena Builder**: Full Electron desktop app with modern UI
 - **Asset Library System**: 12 built-in assets with drag-and-drop
 - **Native Integration**: Windows file dialogs and file system access
@@ -32,6 +80,222 @@
 ---
 
 ## 📋 **Version History - Recent Updates**
+
+### Version 0.47 - SpecOps UI / Version Modal (2026-07-24)
+**Status**: ✅ Complete
+
+#### Goal
+Nostalgic millennial SpecOps feel (SOCOM / early Tom Clancy) — briefing room, not arcade neon.
+
+#### Changes
+- `#start-menu` full-bleed tactical briefing with brand hero + numbered ops
+- `#version-modal` INTEL BRIEFING (BUILD stamp opens it)
+- CSS vars: olive / brass / muted green-grey; corner brackets; light scanlines
+- Fonts: Barlow Condensed + Share Tech Mono
+- `home.html` stand-down screen restyled
+- Docs: `CHANGELOG.md` added; SUMMARY header refreshed
+
+#### Files
+- `game/index.html`
+- `game/home.html`
+- `game/style.css`
+- `game/src/ui/ui.js`
+- `game/src/ui/versionBriefing.js`
+- `docs/SCRATCHPAD.md`
+- `docs/CHANGELOG.md`
+- `docs/SUMMARY.md`
+
+#### Verify
+- Hard refresh → homescreen reads as SpecOps command UI
+- Click BUILD 0.47 → intel modal with notes; Esc / CLOSE / backdrop dismisses
+
+### Version 0.46 - Combat Feel / FPS Loop (2026-07-24)
+**Status**: ✅ Complete
+
+#### Gaps closed
+1. **No combat HUD** — only a crosshair; ammo/HP invisible
+2. **Reload unbound** — settings had `r` but input never set `reload`
+3. **Player immortal** — no death/respawn/feedback when damaged
+4. **Friendly fire / foot hits** — bullets damaged teammates and tested against feet pivot
+5. **Bot tracers never hit player** — collision only checked bots
+
+#### Fix
+- HUD: HP bar, ammo, kills, red damage vignette, X hitmarker (kill tint)
+- Input: `reload` state + clear; main calls `gun.reload()` / auto-reload
+- Player: `takeDamage` / `die` / `respawn` (3s), kill counter
+- Bullets: `owner` on spawn; team-safe; body center Y+1; swept segment vs point
+- Glock/Bot: pass owner into `addBullet`
+
+#### Docs (2026-07-24)
+- Updated `docs/SUMMARY.md`, root `SUMMARY.md`, `docs/SBOM.md`, `docs/FILE_MAP.md`, `docs/ARCHITECTURE.md`, `README.md`
+- Added `docs/CHANGELOG.md` (0.37–0.46)
+
+#### Verify
+- Shoot enemy → hitmarker, bot HP drops, kill increments at 0 HP
+- Get shot → red vignette, HP bar drops, death → 3s respawn
+- Teammate bots ignore your bullets (and yours ignore theirs)
+- Press R (or empty mag) → ammo refills after reload delay
+
+#### Files
+- `game/index.html`, `game/style.css`
+- `game/src/core/input.js`, `game/src/core/main.js`
+- `game/src/player/player.js`, `game/src/player/glock.js`, `game/src/player/bullet.js`
+- `game/src/systems/bot/Bot.js`, `BotManager.js`, `BotCombat.js`
+- `docs/SCRATCHPAD.md`, `docs/SUMMARY.md`, `docs/CHANGELOG.md`, `docs/SBOM.md`, `docs/FILE_MAP.md`, `docs/ARCHITECTURE.md`, `README.md`, `SUMMARY.md`
+
+### Version 0.45 - Laptop Touchpad Input (2026-07-24)
+**Status**: ✅ Complete
+
+#### Problem
+Touchpad + keyboard on laptops felt buggy: look snaps (palm / finger lift), WASD stuck after Alt-Tab / lock loss, two-finger scroll fighting aim.
+
+#### Fix
+- Per-event look spike cap (64px) + per-frame accumulate cap (120)
+- `resetGameplayInput` on window blur, `visibilitychange`, pause, pointer-lock exit
+- Brief look ignore after pointer lock acquire
+- Block `wheel` / contextmenu while pointer-locked
+- Wire `gameplay.mouseSensitivity` into player look
+
+#### Files
+- `game/src/core/input.js`
+- `game/src/core/main.js`
+- `game/src/player/player.js`
+- `docs/SCRATCHPAD.md`
+
+#### Verify
+- Hard refresh → play with trackpad + WASD
+- Look should not hard-snap on finger lift
+- Alt-Tab / Esc pause should not leave you sliding forever
+
+### Version 0.44 - Glock Cohesion Pass (2026-07-24)
+**Status**: ✅ Complete
+
+#### Problem
+FP Glock read as floating bricks: top-rail slabs, crude sights, weak guard/mag, flat black silhouette.
+
+#### Fix
+- Overlapping slide/frame/dust-cover volumes
+- Side-inset serrations + ejection port (not floating on top)
+- U rear sight + flush front sight with red dot
+- Box trigger guard connected to frame; mag flush into grip
+- Slight material contrast (slide vs frame vs polymer)
+- Hand fingers curl tighter around grip
+
+#### Files
+- `game/src/player/glock.js`
+- `docs/SCRATCHPAD.md`
+
+#### Verify
+- Hard refresh: gun looks like one pistol, not stacked boxes
+- Recoil still kicks slide back
+
+### Version 0.43 - Bot AI Rewrite + Viewmodel/Turn Fixes (2026-07-24)
+**Status**: ✅ Complete
+
+#### Screenshot issues addressed
+1. **Gun clipped / half missing**: Camera `near` was `0.5` while viewmodel sat at ~0.3–0.45 → clipped. Near → `0.05`; viewmodel moved in-frame.
+2. **Gun painted bright red**: `updatePlayerTeamColor()` traversed into camera children and dyed the FPS gun. Skip camera / `glockViewmodel` / `skipTeamColor`.
+3. **Bots run without looking/shooting**: Replaced heavy BotBrain decision tree with lean FSM: `patrol` → `chase` → `attack` (face target, standoff, fire when facing).
+4. **Player turn felt 180°**: Movement now uses `camera.getWorldQuaternion()` (camera is parented under mesh).
+
+#### Files
+- `game/src/systems/bot/BotBrain.js` (rewrite)
+- `game/src/systems/bot/BotMovement.js` (facing owned by brain)
+- `game/src/systems/bot/BotManager.js` (team color safe)
+- `game/src/player/glock.js` (position/scale)
+- `game/src/player/player.js` (world look move)
+- `game/src/core/main.js` (near plane)
+- `docs/SCRATCHPAD.md`
+
+#### Verify
+- Full hand+gun visible bottom-right, steel/skin colors (not team red)
+- W moves toward crosshair look
+- Enemy bots turn toward player, close in, and shoot tracers
+
+### Version 0.42 - Bot Movement Feel Fix (2026-07-24)
+**Status**: ✅ Complete
+
+#### Why bots felt bad
+1. **Double friction**: `BotMovement` and `Bot.updatePhysics` both did `velocity *= 0.98` every frame → crawl
+2. **Weak steering**: seek force × `deltaTime` (~0.016) never reached maxSpeed
+3. **Target thrash**: A* pathfollow + cover-seeking + combat repositioning overwrote patrol/hunt every frame
+4. **Flocking** pushed spawn-clustered bots against each other
+5. **Combat aim** fought locomotion facing while moving
+
+#### Fix
+- Direct accel lerp toward desired velocity (`1 - exp(-accel * dt)`)
+- No physics horizontal friction; soft separation only
+- Pathfinding / cover / flocking off by default
+- Horizontal distance for patrol arrive; hunt uses flat enemy position
+- Combat body-aim only when not sprinting; tactical repositioning disabled
+
+#### Verify
+- Bots leave spawn and patrol across the arena at ~4–7 u/s
+- No stuck jitter in place; minimap dots drift smoothly
+- `window.DEBUG_BOT_MOVEMENT = true` occasional speed/dist logs
+
+#### Files
+- `game/src/systems/bot/BotMovement.js`
+- `game/src/systems/bot/Bot.js`
+- `game/src/systems/bot/BotCombat.js`
+- `docs/SCRATCHPAD.md`
+
+### Version 0.41 - FPS Arm / Gun / Bullet Visual Polish (2026-07-24)
+**Status**: ✅ Complete
+
+#### Before
+- Gun: single gray `BoxGeometry` floating on camera
+- No first-person arm
+- Bullet: tiny yellow sphere (hard to read in motion)
+
+#### After
+- **Glock** (`glock.js`): camera viewmodel with sleeve/forearm/hand/fingers + steel slide, grip, barrel, sights, mag; slide kick + recoil settle; bot world gun without FP arm
+- **Bullet** (`bullet.js`): elongated emissive tracer + glow shell, `lookAt` along velocity, slightly faster (120)
+- **Avatar showcase**: matching procedural pistol silhouette
+- **main.js**: `gun.update(deltaTime)`; fire-rate gated inside `Glock.fire()` only
+
+#### Files Modified
+- `game/src/player/glock.js`
+- `game/src/player/bullet.js`
+- `game/src/player/avatar.js`
+- `game/src/core/main.js`
+- `docs/SCRATCHPAD.md`
+
+### Version 0.40 - Bot NPC Vanish Fix + Combat Upgrade (2026-07-24)
+**Status**: ✅ Complete
+
+#### Root Cause
+Bots stayed on the minimap (`bot.position`) but vanished in 3D because `BotCombat.calculateAccuracyModifier` multiplied by `currentWeapon.accuracy` when `Glock` had no `accuracy` → `NaN` → `bot.rotation.y = NaN` → WebGL dropped the mesh transform. Secondary issues: Infinity bounding hacks, `userData` wipe killing HP helpers, inverted facing vs Three.js `-Z`, A* `getNeighbors` overridden by flocking, double system construction, spawn vector mutation, player always classified as enemy (`team: 'player'`).
+
+#### Fixes / Upgrades
+- [game/src/player/glock.js](game/src/player/glock.js): `accuracy`, `damage`, `type`, `reloadTime`; `fire(direction?)` with fire-rate gate
+- [game/src/systems/bot/Bot.js](game/src/systems/bot/Bot.js): merge `userData`, remove Infinity bounds, NaN guards, `DEBUG_BOT_RENDER`, single brain-owned systems, safer HP flash, respawn visibility
+- [game/src/systems/bot/BotCombat.js](game/src/systems/bot/BotCombat.js): guarded accuracy/damage, flat targets, `-Z` aim facing, real bullet aim, damage apply
+- [game/src/systems/bot/BotMovement.js](game/src/systems/bot/BotMovement.js): `getGridNeighbors`, facing fix, patrol Y, `getOtherBots` wired
+- [game/src/systems/bot/BotSenses.js](game/src/systems/bot/BotSenses.js): real player team, clamped FOV acos, flat enemy records
+- [game/src/systems/bot/BotBrain.js](game/src/systems/bot/BotBrain.js): health normalized 0–1 for decisions; recovery re-syncs Bot refs
+- [game/src/systems/bot/BotManager.js](game/src/systems/bot/BotManager.js): clear/clone spawns, team areas not overwritten, one-shot death respawn
+- [game/src/core/main.js](game/src/core/main.js): `mapId`, `frameCount`, removed per-frame bot spam
+
+#### Verify Checklist
+1. Start map with 2+ bots/team — bodies stay visible 30s+ from all angles
+2. Minimap dots match visible bodies
+3. Enemy bots hunt/shoot opposite team + enemy-team player
+4. Same-team player not treated as enemy
+5. Console clean of per-frame bot logs / ingest spam
+6. Kill + 5s wait → bot reappears in world and on map
+7. Optional: `window.DEBUG_BOT_RENDER = true` logs once on NaN/visibility issues
+
+#### Files Modified
+- `game/src/player/glock.js`
+- `game/src/systems/bot/Bot.js`
+- `game/src/systems/bot/BotCombat.js`
+- `game/src/systems/bot/BotMovement.js`
+- `game/src/systems/bot/BotSenses.js`
+- `game/src/systems/bot/BotBrain.js`
+- `game/src/systems/bot/BotManager.js`
+- `game/src/core/main.js`
+- `docs/SCRATCHPAD.md`
 
 ### Version 0.39 - Rendering & Physics Fixes (Current)
 **Status**: ✅ Complete

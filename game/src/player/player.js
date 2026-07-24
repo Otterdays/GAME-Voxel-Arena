@@ -7,21 +7,26 @@ import { checkCollision } from '../core/physics.js';
 const PLAYER_RADIUS = 0.5;
 const PLAYER_HEIGHT = 1.8;
 const PLAYER_SPEED = 5.0; // meters per second
-const MOUSE_SENSITIVITY = 0.002;
+const DEFAULT_MOUSE_SENSITIVITY = 0.002;
+// Cap accumulated look per frame (touchpad can queue many events)
+const LOOK_FRAME_CAP = 120;
 const JUMP_FORCE = 8.0; // Upward velocity when jumping
 const GRAVITY = 20.0; // Downward acceleration
+const RESPAWN_DELAY_MS = 3000;
 
 export class Player {
     constructor(camera, scene, structures, spawnPoint) {
         this.camera = camera;
         this.scene = scene;
         this.structures = structures;
+        this.isPlayer = true;
 
         // Player model
         this.mesh = createCharacterModel(0x00ff00); // Green for player
         this.mesh.position.set(spawnPoint.x, spawnPoint.y, spawnPoint.z);
         this.scene.add(this.mesh);
-        
+        this.spawnPoint = spawnPoint.clone ? spawnPoint.clone() : { ...spawnPoint };
+
         // Team assignment
         this.team = 'red'; // Default team
 
@@ -50,24 +55,43 @@ export class Player {
 
         this.wobbleTimer = 0;
         this.isMoving = false;
-        
-        // Player health
+
+        // Combat state (health 0–1 to match existing bot sense normalization)
         this.health = 1.0;
         this.maxHealth = 1.0;
+        this.isAlive = true;
+        this.kills = 0;
+        this.deaths = 0;
+        this.damageFlash = 0;
+        this._respawnTimer = null;
+    }
+
+    get position() {
+        return this.mesh.position;
     }
 
     update(deltaTime) {
+        if (!this.isAlive) {
+            if (this.damageFlash > 0) {
+                this.damageFlash = Math.max(0, this.damageFlash - deltaTime * 1.5);
+            }
+            return;
+        }
+
         const input = getInputState();
 
-        // Mouse look
-        const { dx, dy } = input.look;
-        this.euler.y -= dx * MOUSE_SENSITIVITY;
-        this.euler.x -= dy * MOUSE_SENSITIVITY;
+        // Mouse / touchpad look
+        let { dx, dy } = input.look;
+        dx = Math.max(-LOOK_FRAME_CAP, Math.min(LOOK_FRAME_CAP, dx));
+        dy = Math.max(-LOOK_FRAME_CAP, Math.min(LOOK_FRAME_CAP, dy));
+        const sens = getSetting('gameplay', 'mouseSensitivity') ?? DEFAULT_MOUSE_SENSITIVITY;
+        this.euler.y -= dx * sens;
+        this.euler.x -= dy * sens;
         this.euler.x = Math.max(this.minPitch, Math.min(this.maxPitch, this.euler.x));
         this.camera.quaternion.setFromEuler(this.euler);
         clearLookInput();
 
-        // Movement
+        // Movement relative to camera LOOK direction (world space)
         const moveDirection = new THREE.Vector3();
         if (input.move.forward) moveDirection.z -= 1;
         if (input.move.backward) moveDirection.z += 1;
@@ -77,9 +101,17 @@ export class Player {
         this.isMoving = moveDirection.lengthSq() > 0;
 
         if (this.isMoving) {
-            moveDirection.normalize().applyQuaternion(this.camera.quaternion);
-            this.velocity.x = moveDirection.x * PLAYER_SPEED;
-            this.velocity.z = moveDirection.z * PLAYER_SPEED;
+            moveDirection.normalize();
+            // Use world quaternion — camera is parented to mesh, local quat alone can feel 180° off
+            const worldQuat = new THREE.Quaternion();
+            this.camera.getWorldQuaternion(worldQuat);
+            moveDirection.applyQuaternion(worldQuat);
+            moveDirection.y = 0;
+            if (moveDirection.lengthSq() > 0.0001) {
+                moveDirection.normalize();
+                this.velocity.x = moveDirection.x * PLAYER_SPEED;
+                this.velocity.z = moveDirection.z * PLAYER_SPEED;
+            }
         }
 
         // Apply velocity and check for collisions
@@ -103,15 +135,6 @@ export class Player {
         this.velocityY -= GRAVITY * deltaTime;
         this.mesh.position.y += this.velocityY * deltaTime;
 
-        // Ground check and collision response - temporarily disabled to test
-        // if (checkCollision(this, this.structures)) {
-        //     this.mesh.position.y = oldPosition.y;
-        //     this.velocityY = 0;
-        //     this.isOnGround = true;
-        // } else {
-        //     this.isOnGround = false;
-        // }
-        
         // Simple ground check - if below y=1.0, set to y=1.0 and stop falling
         if (this.mesh.position.y < 1.0) {
             this.mesh.position.y = 1.0;
@@ -133,5 +156,59 @@ export class Player {
             this.wobbleTimer = 0; // Reset timer when not moving
             this.camera.position.y = this.cameraBaseY; // Reset camera to base Y
         }
+
+        if (this.damageFlash > 0) {
+            this.damageFlash = Math.max(0, this.damageFlash - deltaTime * 2.5);
+        }
+    }
+
+    /**
+     * @param {number} amount Damage in 0–100 points (same scale as bots)
+     * @param {*} [source]
+     */
+    takeDamage(amount, source = null) {
+        if (!this.isAlive) return;
+
+        const normalized = amount > 1.5 ? amount / 100 : amount;
+        this.health = Math.max(0, this.health - normalized);
+        this.damageFlash = Math.min(1, this.damageFlash + 0.55 + normalized * 0.5);
+
+        if (this.health <= 0) {
+            this.die(source);
+        }
+    }
+
+    die(killer = null) {
+        if (!this.isAlive) return;
+
+        this.isAlive = false;
+        this.health = 0;
+        this.deaths++;
+        this.velocity.set(0, 0, 0);
+        this.velocityY = 0;
+        this.damageFlash = 1;
+
+        if (this._respawnTimer) clearTimeout(this._respawnTimer);
+        this._respawnTimer = setTimeout(() => this.respawn(), RESPAWN_DELAY_MS);
+    }
+
+    respawn() {
+        this._respawnTimer = null;
+        this.isAlive = true;
+        this.health = this.maxHealth;
+        this.velocity.set(0, 0, 0);
+        this.velocityY = 0;
+        this.damageFlash = 0;
+
+        const sp = this.spawnPoint;
+        if (sp) {
+            this.mesh.position.set(sp.x, sp.y, sp.z);
+        } else {
+            this.mesh.position.y = 1.0;
+        }
+    }
+
+    setSpawnPoint(point) {
+        this.spawnPoint = point.clone ? point.clone() : { ...point };
     }
 }

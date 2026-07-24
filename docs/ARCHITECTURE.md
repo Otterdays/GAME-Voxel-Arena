@@ -1,5 +1,7 @@
 # Architecture
 
+<!-- PRESERVATION RULE: Never delete or replace content. Append or annotate only. -->
+
 ## Overview
 
 Voxel Arena is a 3D FPS game built with HTML, CSS, and JavaScript. Three.js is used for 3D rendering, loaded globally via a `<script>` tag in `index.html`. The application runs entirely in the browser.
@@ -7,6 +9,19 @@ Voxel Arena is a 3D FPS game built with HTML, CSS, and JavaScript. Three.js is u
 **📁 File Locations**: All file paths are relative to the project root `Voxel-Arena/`. For complete file mapping, see [`FILE_MAP.md`](./FILE_MAP.md).
 
 **🎯 Entry Point**: `game/index.html` → loads `game/src/core/main.js` → initializes `Game` class
+
+> [AMENDED 2026-07-24]: Combat loop notes — see **Combat Loop (0.46)** below. BotBrain is a lean FSM (patrol/chase/attack), not the older decision-tree description elsewhere in this file.
+
+## Combat Loop (0.46)
+
+| Concern | Where |
+|--------|--------|
+| Bullet spawn + owner | `player/glock.js` → `Game.addBullet(pos, dir, owner)` |
+| Hit tests (team-safe, swept) | `core/main.js` (`distPointToSegment`, `isFriendly`) |
+| Player HP / death / respawn | `player/player.js` (`takeDamage`, `die`, `respawn`) |
+| Reload input | `core/input.js` (`reload`) + `main.js` update |
+| HUD / hitmarker / vignette | `game/index.html`, `game/style.css`, `main.updateCombatHUD()` |
+| Bot fire | `systems/bot/BotBrain.js` `fireAt` → `Glock.fire(aim)` with bot as owner |
 
 ## Module Overview
 
@@ -29,6 +44,7 @@ Voxel Arena is a 3D FPS game built with HTML, CSS, and JavaScript. Three.js is u
 - Manages game state (`menu`, `playing`, `paused`)
 - Runs main game loop at 60fps
 - Coordinates all systems (player, bots, UI, bullets)
+- [AMENDED 2026-07-24]: Owner-aware bullet collision, combat HUD, hitmarkers, reload/auto-reload
 - Handles game lifecycle (start, pause, quit)
 
 **Imports From**:
@@ -112,6 +128,8 @@ Voxel Arena is a 3D FPS game built with HTML, CSS, and JavaScript. Three.js is u
 
 #### `game/src/player/player.js` - Player Controller
 **Full Path**: `Voxel-Arena/game/src/player/player.js`  
+**Purpose**: First-person player movement, look, and combat survivability  
+> [AMENDED 2026-07-24]: Also owns `takeDamage` / `die` / `respawn`, kill counter, damage flash; look uses gameplay mouse sensitivity + frame look cap.
 **Purpose**: First-person player movement, camera controls, physics  
 **Key Responsibilities**:
 - WASD movement with physics

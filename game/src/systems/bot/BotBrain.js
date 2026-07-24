@@ -1,14 +1,7 @@
 /**
- * BotBrain - Core AI Decision Making System
- * 
- * This is the main AI brain that processes sensory input and makes decisions.
- * It uses a hierarchical state machine with decision trees for complex behaviors.
- * 
- * Architecture:
- * - Sensory System: Processes vision, hearing, and game state
- * - Decision Engine: Uses weighted decision trees and state machines
- * - Action Planner: Converts decisions into executable actions
- * - Learning System: Adapts behavior based on success/failure
+ * BotBrain — lean tactical AI
+ * Patrol when idle; chase, face, and shoot enemies. No heavy decision-tree thrash.
+ * // [TRACE: SCRATCHPAD.md]
  */
 
 import { BotSenses } from './BotSenses.js';
@@ -21,22 +14,24 @@ export class BotBrain {
     constructor(bot, difficulty = 'medium') {
         this.bot = bot;
         this.difficulty = difficulty;
-        
-        // Core systems
+
         this.senses = new BotSenses(this);
         this.memory = new BotMemory(this);
         this.personality = new BotPersonality(this, difficulty);
         this.combat = new BotCombat(this);
         this.movement = new BotMovement(this);
-        
-        // AI State
+
         this.currentState = 'patrol';
         this.stateHistory = [];
-        this.decisionTree = this.buildDecisionTree();
         this.lastDecisionTime = 0;
-        this.decisionInterval = 0.1; // 100ms between decisions
-        
-        // Performance metrics
+        this.decisionInterval = 0.2;
+
+        this.engageRange = this.getEngageRange();
+        this.shootRange = this.getShootRange();
+        this.visionRange = this.getVisionRange();
+        this.aimTurnSpeed = 8.0;
+
+        this.activeEnemy = null;
         this.performanceMetrics = {
             kills: 0,
             deaths: 0,
@@ -45,307 +40,250 @@ export class BotBrain {
             damageDealt: 0,
             damageTaken: 0
         };
-        
-        // Learning system
+
         this.learningRate = this.getLearningRate();
         this.behaviorWeights = this.initializeBehaviorWeights();
-        
     }
-    
+
     /**
-     * Main update loop - called every frame
+     * Main update — simple FSM: patrol | chase | attack
      */
     update(deltaTime) {
         try {
-            // Update all subsystems
-            this.senses.update(deltaTime);
-            this.memory.update(deltaTime);
-            this.combat.update(deltaTime);
-            this.movement.update(deltaTime);
+            const dt = Math.min(deltaTime, 0.05);
 
-            // Make decisions at specified intervals
-            if (Date.now() - this.lastDecisionTime > this.decisionInterval * 1000) {
-                this.makeDecision();
-                this.lastDecisionTime = Date.now();
+            // Keep subsystems alive for memory/personality APIs, but drive combat ourselves
+            this.memory.update(dt);
+
+            const enemy = this.findBestEnemy();
+            this.activeEnemy = enemy;
+
+            if (enemy) {
+                this.runCombatBehavior(enemy, dt);
+            } else {
+                this.runPatrolBehavior(dt);
             }
 
-            // Update performance metrics
-            this.updatePerformanceMetrics(deltaTime);
+            this.movement.update(dt);
+            this.applyFacing(enemy, dt);
+            this.updatePerformanceMetrics(dt);
         } catch (error) {
             console.error(`Bot ${this.bot.id} brain error:`, error);
-            // Reset brain systems to recover
-            this.senses = new BotSenses(this);
-            this.memory = new BotMemory(this);
-            this.combat = new BotCombat(this);
-            this.movement = new BotMovement(this);
+            this.recoverSystems();
         }
     }
-    
-    /**
-     * Core decision-making process
-     */
-    makeDecision() {
-        // Gather current situation data
-        const situation = this.analyzeSituation();
-        
-        // Apply personality modifiers
-        const modifiedSituation = this.personality.modifySituation(situation);
-        
-        // Make decision using decision tree
-        const decision = this.evaluateDecisionTree(modifiedSituation);
-        
-        // Execute decision
-        this.executeDecision(decision);
-        
-        // Store decision for learning
-        this.memory.recordDecision(situation, decision);
+
+    runPatrolBehavior(dt) {
+        this.currentState = 'patrol';
+        this.combat.currentTarget = null;
+        this.movement.executePatrol({});
     }
-    
-    /**
-     * Analyze current game situation
-     */
-    analyzeSituation() {
-        return {
-            // Threat assessment
-            threats: this.senses.getThreats(),
-            nearestThreat: this.senses.getNearestThreat(),
-            threatLevel: this.senses.getThreatLevel(),
-            
-            // Environmental factors
-            health: this.bot.health,
-            ammo: this.bot.weapon.ammo,
-            position: this.bot.position,
-            cover: this.senses.findCover(),
-            
-            // Team situation
-            allies: this.senses.getAllies(),
-            enemies: this.senses.getEnemies(),
-            
-            // Game state
-            gameTime: Date.now(),
-            map: this.bot.game.mapId,
-            
-            // Memory context
-            recentEvents: this.memory.getRecentEvents(5),
-            learnedPatterns: this.memory.getLearnedPatterns()
-        };
-    }
-    
-    /**
-     * Build the decision tree for AI behavior
-     */
-    buildDecisionTree() {
-        return {
-            // Combat decisions
-            combat: {
-                engage: {
-                    condition: (situation) => situation.threatLevel > 0.7 && situation.health > 0.3,
-                    action: 'combat_engage',
-                    weight: 0.8
-                },
-                retreat: {
-                    condition: (situation) => situation.threatLevel > 0.8 && situation.health < 0.3,
-                    action: 'combat_retreat',
-                    weight: 0.9
-                },
-                flank: {
-                    condition: (situation) => situation.threatLevel > 0.5 && situation.cover.length > 0,
-                    action: 'combat_flank',
-                    weight: 0.6
-                }
-            },
-            
-            // Movement decisions
-            movement: {
-                patrol: {
-                    condition: (situation) => situation.threatLevel < 0.3,
-                    action: 'movement_patrol',
-                    weight: 0.7
-                },
-                hunt: {
-                    condition: (situation) => situation.enemies.length > 0 && situation.threatLevel < 0.5,
-                    action: 'movement_hunt',
-                    weight: 0.6
-                },
-                regroup: {
-                    condition: (situation) => situation.allies.length < 2 && situation.threatLevel > 0.4,
-                    action: 'movement_regroup',
-                    weight: 0.5
-                }
-            },
-            
-            // Survival decisions
-            survival: {
-                heal: {
-                    condition: (situation) => situation.health < 0.5 && situation.threatLevel < 0.4,
-                    action: 'survival_heal',
-                    weight: 0.8
-                },
-                reload: {
-                    condition: (situation) => situation.ammo < 5 && situation.threatLevel < 0.6,
-                    action: 'survival_reload',
-                    weight: 0.7
-                },
-                hide: {
-                    condition: (situation) => situation.threatLevel > 0.9,
-                    action: 'survival_hide',
-                    weight: 0.9
-                }
-            }
-        };
-    }
-    
-    /**
-     * Evaluate decision tree and return best action
-     */
-    evaluateDecisionTree(situation) {
-        let bestDecision = null;
-        let bestScore = 0;
-        
-        // Evaluate each category
-        for (const [category, decisions] of Object.entries(this.decisionTree)) {
-            for (const [decisionName, decision] of Object.entries(decisions)) {
-                if (decision.condition(situation)) {
-                    const score = this.calculateDecisionScore(decision, situation);
-                    if (score > bestScore) {
-                        bestScore = score;
-                        bestDecision = {
-                            category,
-                            name: decisionName,
-                            action: decision.action,
-                            score,
-                            situation
-                        };
-                    }
-                }
+
+    runCombatBehavior(enemy, dt) {
+        const dist = this.horizontalDist(this.bot.position, enemy.position);
+
+        if (dist > this.engageRange) {
+            this.currentState = 'chase';
+        } else {
+            this.currentState = 'attack';
+        }
+
+        // Move toward a standoff point (don't stand on top of target)
+        const standoff = Math.min(6.0, this.shootRange * 0.45);
+        const toEnemy = new THREE.Vector3(
+            enemy.position.x - this.bot.position.x,
+            0,
+            enemy.position.z - this.bot.position.z
+        );
+        if (toEnemy.lengthSq() > 0.0001) {
+            toEnemy.normalize();
+            if (dist > standoff + 1.0) {
+                const dest = enemy.position.clone().sub(toEnemy.clone().multiplyScalar(standoff));
+                dest.y = this.bot.position.y;
+                this.movement.setTarget(dest);
+            } else if (dist < standoff - 1.5) {
+                // Back up a bit
+                const dest = this.bot.position.clone().sub(toEnemy.clone().multiplyScalar(3));
+                dest.y = this.bot.position.y;
+                this.movement.setTarget(dest);
+            } else {
+                // Strafe / hold — clear move target so they stop and shoot
+                this.movement.currentTarget = null;
+                this.movement.velocity.multiplyScalar(0.85);
             }
         }
-        
-        // Default to patrol if no other decision is made
-        return bestDecision || {
-            category: 'movement',
-            name: 'patrol',
-            action: 'movement_patrol',
-            score: 0.5,
-            situation
-        };
-    }
-    
-    /**
-     * Calculate score for a decision based on multiple factors
-     */
-    calculateDecisionScore(decision, situation) {
-        let score = decision.weight;
-        
-        // Apply personality modifiers
-        score *= this.personality.getDecisionModifier(decision.action);
-        
-        // Apply learning from past experiences
-        score *= this.memory.getDecisionSuccessRate(decision.action);
-        
-        // Apply situational modifiers
-        score *= this.getSituationalModifier(decision.action, situation);
-        
-        // Add some randomness for unpredictability
-        score *= (0.8 + Math.random() * 0.4);
-        
-        return Math.max(0, Math.min(1, score));
-    }
-    
-    /**
-     * Get situational modifier for a decision
-     */
-    getSituationalModifier(action, situation) {
-        switch (action) {
-            case 'combat_engage':
-                return situation.health > 0.7 ? 1.2 : 0.8;
-            case 'combat_retreat':
-                return situation.health < 0.2 ? 1.5 : 0.5;
-            case 'movement_patrol':
-                return situation.threatLevel < 0.2 ? 1.3 : 0.7;
-            default:
-                return 1.0;
+
+        // Shoot when roughly facing and in range
+        if (dist <= this.shootRange && this.isFacing(enemy.position, 0.55)) {
+            this.fireAt(enemy);
         }
     }
-    
+
     /**
-     * Execute a decision by delegating to appropriate system
+     * Face enemy when fighting; otherwise face travel direction
      */
-    executeDecision(decision) {
-        // Update state
-        this.setState(decision.category);
-        
-        // Delegate to appropriate system
-        switch (decision.category) {
-            case 'combat':
-                this.combat.executeAction(decision.action, decision.situation);
-                break;
-            case 'movement':
-                this.movement.executeAction(decision.action, decision.situation);
-                break;
-            case 'survival':
-                this.executeSurvivalAction(decision.action, decision.situation);
-                break;
+    applyFacing(enemy, dt) {
+        let targetYaw = null;
+
+        if (enemy && enemy.position &&
+            (this.currentState === 'attack' || this.currentState === 'chase')) {
+            const dx = enemy.position.x - this.bot.position.x;
+            const dz = enemy.position.z - this.bot.position.z;
+            if (dx * dx + dz * dz > 0.01) {
+                // Three.js forward is -Z
+                targetYaw = Math.atan2(-dx, -dz);
+            }
+        } else if (this.bot.velocity.lengthSq() > 0.05) {
+            targetYaw = Math.atan2(-this.bot.velocity.x, -this.bot.velocity.z);
+        } else if (this.movement.currentTarget) {
+            const dx = this.movement.currentTarget.x - this.bot.position.x;
+            const dz = this.movement.currentTarget.z - this.bot.position.z;
+            if (dx * dx + dz * dz > 0.01) {
+                targetYaw = Math.atan2(-dx, -dz);
+            }
         }
-        
-        // Record decision for learning
-        this.memory.recordDecision(decision.situation, decision);
+
+        if (targetYaw === null || isNaN(targetYaw)) return;
+
+        // Shortest-path yaw lerp
+        let delta = targetYaw - this.bot.rotation.y;
+        while (delta > Math.PI) delta -= Math.PI * 2;
+        while (delta < -Math.PI) delta += Math.PI * 2;
+        const step = Math.max(-this.aimTurnSpeed * dt, Math.min(this.aimTurnSpeed * dt, delta));
+        this.bot.rotation.y += step;
+
+        // Sync mesh immediately so vision/forward match
+        if (this.bot.mesh) {
+            this.bot.mesh.rotation.y = this.bot.rotation.y;
+        }
     }
-    
-    /**
-     * Execute survival actions
-     */
-    executeSurvivalAction(action, situation) {
-        switch (action) {
-            case 'survival_heal':
-                // Look for health packs or safe healing spot
-                // Use patrol behavior to find a safer location
-                this.movement.executePatrol(situation);
-                break;
-            case 'survival_reload':
-                // Find cover and reload - use retreat behavior
-                this.movement.executeRetreat(situation);
-                if (this.bot.weapon && this.bot.weapon.reload) {
-                    this.bot.weapon.reload();
+
+    fireAt(enemy) {
+        const weapon = this.bot.weapon;
+        if (!weapon || weapon.ammo <= 0) {
+            if (weapon && weapon.needsReload && weapon.needsReload()) weapon.reload();
+            return;
+        }
+
+        const aim = new THREE.Vector3(
+            enemy.position.x - this.bot.position.x,
+            (enemy.position.y + 1.0) - (this.bot.position.y + 1.2),
+            enemy.position.z - this.bot.position.z
+        );
+        if (aim.lengthSq() < 0.0001) return;
+        aim.normalize();
+
+        // Small inaccuracy by difficulty
+        const spread = this.difficulty === 'easy' ? 0.08
+            : this.difficulty === 'medium' ? 0.04
+            : this.difficulty === 'hard' ? 0.02 : 0.01;
+        aim.x += (Math.random() - 0.5) * spread;
+        aim.y += (Math.random() - 0.5) * spread * 0.5;
+        aim.z += (Math.random() - 0.5) * spread;
+        aim.normalize();
+
+        weapon.fire(aim);
+        this.combat.shotsFired = (this.combat.shotsFired || 0) + 1;
+    }
+
+    isFacing(worldPos, minDot = 0.5) {
+        const forward = this.bot.getForwardDirection();
+        forward.y = 0;
+        if (forward.lengthSq() < 0.0001) return false;
+        forward.normalize();
+
+        const to = new THREE.Vector3(
+            worldPos.x - this.bot.position.x,
+            0,
+            worldPos.z - this.bot.position.z
+        );
+        if (to.lengthSq() < 0.0001) return true;
+        to.normalize();
+        return forward.dot(to) >= minDot;
+    }
+
+    findBestEnemy() {
+        const candidates = [];
+        const myTeam = this.bot.team;
+        const origin = this.bot.position;
+
+        // Player (opposite team only)
+        const player = this.bot.game.player;
+        if (player && player.mesh && (player.health ?? 1) > 0) {
+            const pTeam = player.team || 'red';
+            if (pTeam !== myTeam) {
+                const pos = player.mesh.position;
+                const d = this.horizontalDist(origin, pos);
+                if (d <= this.visionRange) {
+                    candidates.push({
+                        id: 'player',
+                        position: pos,
+                        health: (player.health ?? 1) * 100,
+                        team: pTeam,
+                        dist: d
+                    });
                 }
-                break;
-            case 'survival_hide':
-                // Find best hiding spot - use retreat behavior
-                this.movement.executeRetreat(situation);
-                break;
+            }
         }
-    }
-    
-    /**
-     * Set AI state and track history
-     */
-    setState(newState) {
-        if (newState !== this.currentState) {
-            this.stateHistory.push({
-                state: this.currentState,
-                timestamp: Date.now(),
-                duration: Date.now() - (this.stateHistory[this.stateHistory.length - 1]?.timestamp || Date.now())
-            });
-            this.currentState = newState;
+
+        // Other bots
+        const bots = this.bot.game.getBots?.() || [];
+        for (const other of bots) {
+            if (!other.isAlive || other.id === this.bot.id || other.team === myTeam) continue;
+            const d = this.horizontalDist(origin, other.position);
+            if (d <= this.visionRange) {
+                candidates.push({
+                    id: other.id,
+                    position: other.position,
+                    health: other.health,
+                    team: other.team,
+                    dist: d,
+                    bot: other
+                });
+            }
         }
+
+        if (candidates.length === 0) return null;
+        candidates.sort((a, b) => a.dist - b.dist);
+        return candidates[0];
     }
-    
-    /**
-     * Get learning rate based on difficulty
-     */
+
+    horizontalDist(a, b) {
+        const dx = a.x - b.x;
+        const dz = a.z - b.z;
+        return Math.sqrt(dx * dx + dz * dz);
+    }
+
+    recoverSystems() {
+        this.senses = new BotSenses(this);
+        this.memory = new BotMemory(this);
+        this.personality = new BotPersonality(this, this.difficulty);
+        this.combat = new BotCombat(this);
+        this.movement = new BotMovement(this);
+        if (this.bot.weapon) this.combat.setWeapon(this.bot.weapon);
+        this.bot.senses = this.senses;
+        this.bot.memory = this.memory;
+        this.bot.personality = this.personality;
+        this.bot.combat = this.combat;
+        this.bot.movement = this.movement;
+    }
+
+    getEngageRange() {
+        return { easy: 35, medium: 45, hard: 55, expert: 65 }[this.difficulty] || 45;
+    }
+
+    getShootRange() {
+        return { easy: 18, medium: 25, hard: 32, expert: 40 }[this.difficulty] || 25;
+    }
+
+    getVisionRange() {
+        return { easy: 40, medium: 55, hard: 70, expert: 90 }[this.difficulty] || 55;
+    }
+
     getLearningRate() {
-        const rates = {
-            easy: 0.1,
-            medium: 0.3,
-            hard: 0.5,
-            expert: 0.7
-        };
-        return rates[this.difficulty] || 0.3;
+        return { easy: 0.1, medium: 0.3, hard: 0.5, expert: 0.7 }[this.difficulty] || 0.3;
     }
-    
-    /**
-     * Initialize behavior weights
-     */
+
     initializeBehaviorWeights() {
         return {
             aggression: this.personality.getEffectiveAggression(),
@@ -354,90 +292,53 @@ export class BotBrain {
             adaptability: this.personality.getEffectiveAdaptability()
         };
     }
-    
-    /**
-     * Update performance metrics
-     */
+
     updatePerformanceMetrics(deltaTime) {
         this.performanceMetrics.survivalTime += deltaTime;
-        
-        // Calculate accuracy
         if (this.combat.shotsFired > 0) {
             this.performanceMetrics.accuracy = this.combat.shotsHit / this.combat.shotsFired;
         }
     }
-    
-    /**
-     * Learn from experience
-     */
-    learnFromExperience() {
-        const recentDecisions = this.memory.getRecentDecisions(10);
-        const successfulDecisions = recentDecisions.filter(d => d.success);
-        
-        // Adjust behavior weights based on success
-        for (const decision of successfulDecisions) {
-            this.adjustBehaviorWeights(decision.action, this.learningRate);
-        }
+
+    // ---- Compatibility stubs for older call sites ----
+
+    makeDecision() { /* driven every frame in update() */ }
+
+    analyzeSituation() {
+        const maxHp = this.bot.maxHealth || 100;
+        return {
+            threats: this.activeEnemy ? [this.activeEnemy] : [],
+            nearestThreat: this.activeEnemy,
+            threatLevel: this.activeEnemy ? 0.8 : 0,
+            health: Math.max(0, Math.min(1, this.bot.health / maxHp)),
+            ammo: this.bot.weapon?.ammo ?? 30,
+            position: this.bot.position,
+            cover: [],
+            allies: [],
+            enemies: this.activeEnemy ? [this.activeEnemy] : [],
+            gameTime: Date.now(),
+            map: this.bot.game.mapId,
+            recentEvents: [],
+            learnedPatterns: []
+        };
     }
-    
-    /**
-     * Adjust behavior weights based on success
-     */
-    adjustBehaviorWeights(action, learningRate) {
-        // This would be implemented based on specific learning algorithms
-        // For now, we'll use a simple reinforcement learning approach
-        const successBonus = 0.1 * learningRate;
-        
-        // Adjust weights based on action type
-        if (action.includes('combat')) {
-            this.behaviorWeights.aggression += successBonus;
-        } else if (action.includes('retreat')) {
-            this.behaviorWeights.caution += successBonus;
-        }
-        
-        // Normalize weights
-        this.normalizeBehaviorWeights();
-    }
-    
-    /**
-     * Normalize behavior weights to keep them balanced
-     */
-    normalizeBehaviorWeights() {
-        const total = Object.values(this.behaviorWeights).reduce((sum, weight) => sum + weight, 0);
-        for (const key in this.behaviorWeights) {
-            this.behaviorWeights[key] = this.behaviorWeights[key] / total;
-        }
-    }
-    
-    /**
-     * Get current AI state for debugging
-     */
+
     getDebugInfo() {
         return {
             currentState: this.currentState,
-            stateHistory: this.stateHistory.slice(-5),
+            activeEnemy: this.activeEnemy?.id || null,
             performanceMetrics: this.performanceMetrics,
-            behaviorWeights: this.behaviorWeights,
-            lastDecision: this.memory.getLastDecision(),
-            threats: this.senses.getThreats(),
-            allies: this.senses.getAllies(),
-            enemies: this.senses.getEnemies()
+            behaviorWeights: this.behaviorWeights
         };
     }
-    
-    /**
-     * Reset AI state (for respawning)
-     */
+
     reset() {
         this.currentState = 'patrol';
+        this.activeEnemy = null;
         this.stateHistory = [];
         this.performanceMetrics = {
-            kills: 0,
-            deaths: 0,
-            accuracy: 0,
-            survivalTime: 0,
-            damageDealt: 0,
-            damageTaken: 0
+            kills: 0, deaths: 0, accuracy: 0,
+            survivalTime: 0, damageDealt: 0, damageTaken: 0
         };
         this.memory.reset();
         this.combat.reset();

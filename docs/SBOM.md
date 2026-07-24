@@ -1,10 +1,14 @@
 # Software Bill of Materials (SBOM)
 
+<!-- PRESERVATION RULE: Never delete or replace content. Append or annotate only. -->
+
 This document lists all the software dependencies of the Voxel Arena project.
 
 **Generated**: December 2024  
-**Project Version**: 0.37  
+**Project Version**: 0.46  
 **Total Dependencies**: 1 external library
+
+> [AMENDED 2026-07-24]: Project version header 0.37 → 0.46. No new external packages added in 0.40–0.46 (still Three.js r128 CDN only). Dependency inventory below unchanged.
 
 ## External Dependencies
 

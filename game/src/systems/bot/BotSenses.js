@@ -121,28 +121,25 @@ export class BotSenses {
      * Check if bot can see a target
      */
     canSeeTarget(target) {
-        // Check distance
+        if (!target || !target.position) return false;
+
         const distance = this.bot.position.distanceTo(target.position);
         if (distance > this.visionRange) {
             return false;
         }
-        
-        // Check field of view
+
         if (!this.isInFieldOfView(target.position)) {
             return false;
         }
-        
-        // Check line of sight (occlusion)
+
         if (!this.hasLineOfSight(target.position)) {
             return false;
         }
-        
-        // Check if target is moving (easier to spot)
+
         if (target.velocity && target.velocity.length() > 0.1) {
-            return true; // Moving targets are easier to spot
+            return true;
         }
-        
-        // Check target size and visibility
+
         const visibility = this.calculateTargetVisibility(target);
         return visibility > this.detectionThresholds.movement;
     }
@@ -151,10 +148,18 @@ export class BotSenses {
      * Check if position is in field of view
      */
     isInFieldOfView(position) {
-        const direction = position.clone().sub(this.bot.position).normalize();
+        const direction = position.clone().sub(this.bot.position);
+        direction.y = 0;
+        if (direction.lengthSq() < 0.0001) return true;
+        direction.normalize();
+
         const forward = this.bot.getForwardDirection();
-        
-        const angle = Math.acos(direction.dot(forward));
+        forward.y = 0;
+        if (forward.lengthSq() < 0.0001) return true;
+        forward.normalize();
+
+        const dot = Math.max(-1, Math.min(1, direction.dot(forward)));
+        const angle = Math.acos(dot);
         return angle <= this.fieldOfView / 2;
     }
     
@@ -379,28 +384,44 @@ export class BotSenses {
         this.threats.clear();
         this.enemies.clear();
         this.allies.clear();
-        
-        // Process visible targets
+
         for (const [id, observation] of this.visibleTargets) {
+            // Flat combat-friendly record
+            const flat = {
+                id,
+                position: observation.position.clone(),
+                health: observation.target?.health ?? 100,
+                team: observation.target?.team,
+                mesh: observation.target?.mesh,
+                confidence: observation.confidence,
+                type: observation.type,
+                target: observation.target
+            };
+
             if (observation.type === 'enemy') {
-                this.enemies.set(id, observation);
-                this.threats.set(id, {
-                    ...observation,
-                    threatLevel: this.calculateThreatLevel(observation.target)
-                });
+                const threatLevel = this.calculateThreatLevel(observation.target);
+                this.enemies.set(id, { ...flat, threatLevel });
+                this.threats.set(id, { ...flat, threatLevel });
             } else if (observation.type === 'ally') {
-                this.allies.set(id, observation);
+                this.allies.set(id, flat);
             }
         }
-        
-        // Process audible targets
+
         for (const [id, observation] of this.audibleTargets) {
             if (observation.type === 'enemy') {
-                this.enemies.set(id, observation);
-                this.threats.set(id, {
-                    ...observation,
-                    threatLevel: this.calculateThreatLevel(observation.sound)
-                });
+                const soundTarget = observation.sound || {};
+                const flat = {
+                    id,
+                    position: observation.position.clone(),
+                    health: soundTarget.health ?? 100,
+                    team: soundTarget.team,
+                    confidence: observation.confidence,
+                    type: 'enemy',
+                    target: soundTarget
+                };
+                const threatLevel = this.calculateThreatLevel(soundTarget);
+                this.enemies.set(id, { ...flat, threatLevel });
+                this.threats.set(id, { ...flat, threatLevel });
             }
         }
     }
@@ -409,27 +430,25 @@ export class BotSenses {
      * Calculate threat level for a target
      */
     calculateThreatLevel(target) {
-        let threatLevel = 0.5; // Base threat level
-        
-        // Distance factor
+        if (!target || !target.position) return 0.5;
+        let threatLevel = 0.5;
+
         const distance = this.bot.position.distanceTo(target.position);
         threatLevel += Math.max(0, 0.3 - (distance / 50));
-        
-        // Health factor
-        if (target.health) {
-            threatLevel += (1 - target.health) * 0.2;
+
+        if (target.health !== undefined) {
+            const ratio = target.health > 1.5 ? target.health / 100 : target.health;
+            threatLevel += (1 - ratio) * 0.2;
         }
-        
-        // Weapon factor
+
         if (target.weapon) {
-            threatLevel += target.weapon.damage * 0.1;
+            threatLevel += (target.weapon.damage ?? 0) * 0.1;
         }
-        
-        // Movement factor
+
         if (target.velocity && target.velocity.length() > 0.1) {
             threatLevel += 0.1;
         }
-        
+
         return Math.max(0, Math.min(1, threatLevel));
     }
     
@@ -449,14 +468,15 @@ export class BotSenses {
     /**
      * Get field of view based on difficulty
      */
+    // Widen FOV slightly so bots can engage without perfect facing
     getFieldOfView() {
         const fovs = {
-            easy: Math.PI / 3, // 60 degrees
-            medium: Math.PI / 2, // 90 degrees
-            hard: Math.PI * 2 / 3, // 120 degrees
-            expert: Math.PI * 3 / 4 // 135 degrees
+            easy: Math.PI / 2,      // 90
+            medium: (Math.PI * 2) / 3, // 120
+            hard: Math.PI * 0.75,  // 135
+            expert: Math.PI * 0.9  // 162
         };
-        return fovs[this.brain.difficulty] || Math.PI / 2;
+        return fovs[this.brain.difficulty] || (Math.PI * 2) / 3;
     }
     
     /**
@@ -476,23 +496,24 @@ export class BotSenses {
      * Get potential targets in range
      */
     getPotentialTargets() {
-        // Get all bots and player from the game
         const targets = [];
-        
-        // Add player if exists
+
         if (this.bot.game.player && this.bot.game.player.mesh) {
+            const player = this.bot.game.player;
+            // Use real player team so same-team player is ally, not always enemy
+            const playerTeam = player.team || 'red';
             targets.push({
                 id: 'player',
-                position: this.bot.game.player.mesh.position,
-                team: 'player',
-                health: this.bot.game.player.health || 1.0,
-                velocity: this.bot.game.player.velocity || new THREE.Vector3(),
-                mesh: this.bot.game.player.mesh
+                position: player.mesh.position,
+                team: playerTeam,
+                // Normalize player health (0-1) to 0-100 for bot combat math
+                health: (player.health ?? 1) * 100,
+                velocity: player.velocity || new THREE.Vector3(),
+                mesh: player.mesh
             });
         }
-        
-        // Add other bots
-        const allBots = this.bot.game.getBots();
+
+        const allBots = this.bot.game.getBots?.() || [];
         allBots.forEach(bot => {
             if (bot.id !== this.bot.id && bot.isAlive) {
                 targets.push({
@@ -505,7 +526,7 @@ export class BotSenses {
                 });
             }
         });
-        
+
         return targets;
     }
     

@@ -1,5 +1,15 @@
 
-import { initInput, getInputState, clearEscapeInput, clearFireInput, setCursorActive, refreshKeybinds } from './input.js';
+import {
+    initInput,
+    getInputState,
+    clearEscapeInput,
+    clearFireInput,
+    clearReloadInput,
+    setCursorActive,
+    refreshKeybinds,
+    onPointerLockChanged,
+    resetGameplayInput,
+} from './input.js';
 import { createArena } from '../world/arena.js';
 import { Player } from '../player/player.js';
 import { Glock } from '../player/glock.js';
@@ -10,11 +20,14 @@ import { initAvatarEditor } from '../player/avatar.js';
 import { BotManager } from '../systems/bot/BotManager.js';
 import { Minimap } from '../ui/minimap.js';
 
+const HIT_RADIUS = 0.95;
+const GUN_DAMAGE = 20;
+
 class Game {
     constructor() {
         this.canvas = document.getElementById('game-canvas');
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.5, 1000);
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.05, 1000);
         this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas });
         this.clock = new THREE.Clock();
 
@@ -30,6 +43,8 @@ class Game {
 
         // Performance monitoring (simplified)
         this.lastFrameTime = 0;
+        this.frameCount = 0;
+        this.mapId = null;
 
         // Audio for main menu
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -229,6 +244,7 @@ class Game {
         }
 
         this.gameState = 'loading';
+        this.mapId = mapId;
         this.stopMenuMusic(); // Stop music when game starts
         setCursorActive(true); // Keep cursor active during loading
 
@@ -255,7 +271,7 @@ class Game {
             // Get spawn point (random if enabled)
             const spawnPoint = this.getRandomSpawnPoint(arena, mapSettings.randomSpawn);
             this.player = new Player(this.camera, this.scene, arena.structures, spawnPoint);
-            this.gun = new Glock(this.camera, this);
+            this.gun = new Glock(this.camera, this, this.player);
             this.minimap = new Minimap();
             console.log('Minimap created for game start');
 
@@ -339,6 +355,7 @@ class Game {
     pauseGame() {
         if (this.gameState !== 'playing') return;
         this.gameState = 'paused';
+        resetGameplayInput();
         UIManager.showPauseMenu();
         // Exit pointer lock when pausing
         if (document.pointerLockElement === this.canvas) {
@@ -413,9 +430,84 @@ class Game {
         }
     }
 
-    addBullet(position, direction) {
-        const bullet = new Bullet(this.scene, position, direction);
+    addBullet(position, direction, owner = null) {
+        const bullet = new Bullet(this.scene, position, direction, owner);
         this.bullets.push(bullet);
+    }
+
+    /**
+     * Body-center hit test (bots/player pivot near feet)
+     */
+    getBodyCenter(entity) {
+        const pos = entity.position || entity.mesh?.position;
+        if (!pos) return null;
+        return new THREE.Vector3(pos.x, pos.y + 1.0, pos.z);
+    }
+
+    /**
+     * Closest distance from point to segment (prev→curr) — reduces fast-bullet tunneling
+     */
+    distPointToSegment(point, a, b) {
+        const ab = new THREE.Vector3().subVectors(b, a);
+        const ap = new THREE.Vector3().subVectors(point, a);
+        const abLenSq = ab.lengthSq();
+        if (abLenSq < 1e-8) return point.distanceTo(a);
+        let t = ap.dot(ab) / abLenSq;
+        t = Math.max(0, Math.min(1, t));
+        const closest = a.clone().addScaledVector(ab, t);
+        return point.distanceTo(closest);
+    }
+
+    isFriendly(owner, target) {
+        if (!owner || !target) return false;
+        if (owner === target) return true;
+        const a = owner.team;
+        const b = target.team;
+        return !!(a && b && a === b);
+    }
+
+    showHitMarker(wasKill = false) {
+        if (getSetting('gameplay', 'hitMarkers') === false) return;
+        const el = document.getElementById('hitmarker');
+        if (!el) return;
+        el.classList.toggle('kill', wasKill);
+        el.classList.add('active');
+        clearTimeout(this._hitMarkerTimer);
+        this._hitMarkerTimer = setTimeout(() => {
+            el.classList.remove('active', 'kill');
+        }, wasKill ? 220 : 90);
+    }
+
+    updateCombatHUD() {
+        if (!this.player || this.gameState !== 'playing') return;
+
+        const hpPct = Math.max(0, Math.min(100, Math.round((this.player.health || 0) * 100)));
+        const fill = document.getElementById('health-fill');
+        const hpText = document.getElementById('health-text');
+        if (fill) {
+            fill.style.width = `${hpPct}%`;
+            fill.style.background = hpPct > 40
+                ? 'linear-gradient(90deg, #008800, #00ff00)'
+                : 'linear-gradient(90deg, #880000, #ff3333)';
+        }
+        if (hpText) hpText.textContent = String(hpPct);
+
+        const ammoText = document.getElementById('ammo-text');
+        const ammoLabel = document.querySelector('#hud-ammo .hud-label');
+        if (ammoText && this.gun) {
+            ammoText.textContent = this.gun.isReloading ? '...' : String(this.gun.ammo);
+            ammoText.classList.toggle('low', !this.gun.isReloading && this.gun.ammo > 0 && this.gun.ammo <= 8);
+            ammoText.classList.toggle('empty', !this.gun.isReloading && this.gun.ammo <= 0);
+            if (ammoLabel) ammoLabel.textContent = `/ ${this.gun.maxAmmo}`;
+        }
+
+        const kills = document.getElementById('hud-kills');
+        if (kills) kills.textContent = `Kills: ${this.player.kills || 0}`;
+
+        const vignette = document.getElementById('damage-vignette');
+        if (vignette) {
+            vignette.style.opacity = String(Math.min(1, this.player.damageFlash || 0));
+        }
     }
 
     // Bot management methods
@@ -444,8 +536,10 @@ class Game {
     }
 
     onPointerlockChange() {
+        const locked = document.pointerLockElement === this.canvas;
+        onPointerLockChanged(locked);
         // Don't auto-pause if we're handling escape key input
-        if (document.pointerLockElement !== this.canvas && this.gameState === 'playing' && !this.isHandlingEscape) {
+        if (!locked && this.gameState === 'playing' && !this.isHandlingEscape) {
             this.pauseGame();
         }
     }
@@ -469,6 +563,7 @@ class Game {
         const deltaTime = this.clock.getDelta();
         const time = this.clock.getElapsedTime();
         const input = getInputState();
+        this.frameCount = (this.frameCount || 0) + 1;
 
         // Monitor performance and update UI scaling
         const avgFPS = this.monitorPerformance(deltaTime);
@@ -495,14 +590,25 @@ class Game {
 
         if (this.gameState === 'playing') {
             this.player.update(deltaTime);
-            this.gun.update(time);
+            this.gun.update(deltaTime);
 
-            // Player firing logic
-            if (input.fire && time - this.gun.lastFireTime > this.gun.fireRate) {
+            // Player firing — Glock.fire() enforces fire rate
+            if (this.player.isAlive && input.fire) {
                 this.gun.fire();
-                this.gun.lastFireTime = time;
                 clearFireInput();
             }
+
+            // Reload (R) + auto-reload when empty
+            if (this.player.isAlive) {
+                if (input.reload) {
+                    this.gun.reload();
+                    clearReloadInput();
+                } else if (getSetting('gameplay', 'autoReload') !== false && this.gun.needsReload()) {
+                    this.gun.reload();
+                }
+            }
+
+            this.updateCombatHUD();
         }
 
         // Update minimap when it exists and we have a player
@@ -522,19 +628,43 @@ class Game {
                 bullet.update(deltaTime);
 
                 let hit = false;
+                const owner = bullet.owner;
 
-                // Check collision with bots
+                // Check collision with bots (body center, team-aware)
                 for (const bot of bots) {
                     if (!bot.isAlive) continue;
+                    if (this.isFriendly(owner, bot)) continue;
 
-                    // Simple distance check for hit detection
-                    // Bot radius is approx 0.5, use 0.8 for easier hitting
-                    if (bullet.mesh.position.distanceTo(bot.position) < 0.8) {
-                        bot.takeDamage(20, this.player); // Gunshot damage 20
+                    const center = this.getBodyCenter(bot);
+                    if (!center) continue;
+
+                    const from = bullet.prevPosition || bullet.mesh.position;
+                    const to = bullet.mesh.position;
+                    if (this.distPointToSegment(center, from, to) < HIT_RADIUS) {
+                        const wasAlive = bot.isAlive;
+                        bot.takeDamage(GUN_DAMAGE, owner);
+
+                        // Player kill feedback
+                        if (owner && (owner === this.player || owner.isPlayer)) {
+                            const killed = wasAlive && !bot.isAlive;
+                            if (killed) this.player.kills = (this.player.kills || 0) + 1;
+                            this.showHitMarker(killed);
+                        }
                         hit = true;
-
-                        // Visual effect for hit (optional, can add particle later)
                         break;
+                    }
+                }
+
+                // Enemy bullets can hit the player
+                if (!hit && this.player && this.player.isAlive) {
+                    if (owner && !this.isFriendly(owner, this.player)) {
+                        const center = this.getBodyCenter(this.player);
+                        const from = bullet.prevPosition || bullet.mesh.position;
+                        const to = bullet.mesh.position;
+                        if (center && this.distPointToSegment(center, from, to) < HIT_RADIUS) {
+                            this.player.takeDamage(GUN_DAMAGE, owner);
+                            hit = true;
+                        }
                     }
                 }
 
@@ -564,8 +694,7 @@ class Game {
             if (this.botManager) {
                 this.botManager.update(deltaTime);
 
-                // Debug: Log bot count during gameplay
-                if (this.gameState === 'playing' && this.botManager) {
+                if (window.DEBUG_BOT_MOVEMENT && this.frameCount % 120 === 0) {
                     const botCount = this.botManager.getAllBots().length;
                     const redBots = this.botManager.getBotsByTeam('red').length;
                     const blueBots = this.botManager.getBotsByTeam('blue').length;

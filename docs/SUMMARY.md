@@ -1,8 +1,44 @@
 # Voxel Arena - Project Summary
 
-**Version**: 0.37  
-**Last Updated**: December 2024  
-**Status**: Phase 1 Complete + Desktop Arena Builder + Critical Bug Fixes - Ready for Phase 2 Development
+<!-- PRESERVATION RULE: Never delete or replace content. Append or annotate only. -->
+
+**Version**: 0.47  
+**Last Updated**: 2026-07-24  
+**Status**: SpecOps UI pass (SOCOM / Clancy briefing) + combat loop + input polish
+
+> [AMENDED 2026-07-24]: Header bumped to 0.47 — SpecOps homescreen + version intel modal. Prior amend: 0.37 → 0.46 combat/input polish. Older sections below retained.
+
+## 🆕 Recent Updates (2026-07-24)
+
+### Refactor audit suite (same day as 0.47)
+- `scripts/refactor_audit.py` + `scripts/audit.bat` — LOC / size-limit report
+- Latest snapshot: `docs/REFACTOR_AUDIT.md` (31 files, ~14.4k LOC; 12 files over 400-line soft limit)
+
+### v0.47 — SpecOps UI / version intel
+- Homescreen = classified SpecOps briefing (brand hero, numbered ops, BUILD stamp)
+- Version modal = INTEL BRIEFING with codenamed build notes
+- Olive / brass tactical palette; Barlow Condensed + Share Tech Mono
+- `docs/CHANGELOG.md` added
+
+### v0.46 — Combat feel / FPS loop
+- Combat HUD: HP bar, ammo, kill counter, damage vignette, hitmarkers
+- Reload (`R`) wired + auto-reload on empty mag
+- Player death / 3s respawn at team spawn
+- Team-safe bullets; body-center + swept hit tests; bots damage player via tracers
+
+### v0.45 — Laptop touchpad input
+- Look spike clamps; clear stuck WASD on blur / pointer-lock loss
+- Ignore look ~80ms after lock; mouse sensitivity setting applied
+
+### v0.44 — Glock model cohesion
+- Flush FP pistol volumes; recessed slide serrations; material contrast
+
+### v0.43 — Lean bot AI + viewmodel / turn fixes
+- BotBrain FSM: patrol → chase → attack (face + shoot)
+- Viewmodel near-plane / team-color paint fix; world-space WASD
+
+### v0.40–0.42 — Bot visibility, movement feel, FPS polish
+- NaN rotation vanish fix; movement double-friction fix; arm+tracer visuals
 
 ## 🎯 Project Overview
 
@@ -78,9 +114,13 @@ Voxel Arena is a browser-based 3D first-person shooter built with vanilla JavaSc
 
 ## 🎮 Current Features
 
+> [AMENDED 2026-07-24]: Combat HUD / reload / death-respawn / team-safe hits added under Core Gameplay. BotBrain note: lean FSM (patrol/chase/attack) is current; older “decision tree” wording below is historical.
+
 ### Core Gameplay
-- **First-Person Controls**: WASD movement with mouse look
-- **Weapon System**: Glock with iron sights and procedural sound effects
+- **First-Person Controls**: WASD movement with mouse look (touchpad spike-hardened)
+- **Weapon System**: Procedural Glock viewmodel (arm + pistol), tracers, reload (`R` / auto)
+- **Combat Loop**: HP/ammo/kills HUD, hitmarkers, damage vignette, player death + 3s respawn
+- **Hit Detection**: Owner-tagged bullets, no friendly fire, body-center + swept segment tests
 - **Physics Engine**: Jumping, gravity, and collision detection
 - **Multiple Maps**: Two distinct arena environments
 - **Custom UI**: Retro-futuristic green-on-black interface
@@ -248,6 +288,8 @@ Voxel Arena is a browser-based 3D first-person shooter built with vanilla JavaSc
 - ✅ **SBOM.md** - Software bill of materials and security
 - ✅ **SCRATCHPAD.md** - Development notes and progress
 - ✅ **SUMMARY.md** - This file - project overview
+- ✅ **CHANGELOG.md** - Version history (Keep a Changelog) — [added 2026-07-24]
+- ✅ **FILE_MAP.md** - Module location reference
 
 ### Documentation Quality
 - **Comprehensive**: Covers all aspects of the project
@@ -257,11 +299,19 @@ Voxel Arena is a browser-based 3D first-person shooter built with vanilla JavaSc
 
 ## 🎯 Next Steps
 
+> [AMENDED 2026-07-24]: AI bots are shipped; priorities refreshed.
+
 ### Immediate Priorities
-1. **AI Bot Development**: Computer-controlled opponents
-2. **Multiplayer Infrastructure**: WebSocket-based networking
-3. **Additional Content**: More maps and weapons
+1. **Multiplayer Infrastructure**: WebSocket-based networking
+2. **Additional Content**: More maps and weapons
+3. **Game Modes**: Score limits / round timer / team deathmatch UI
 4. **Performance Optimization**: WebGL enhancements
+
+### Historical note (December 2024 priorities — superseded)
+1. ~~AI Bot Development~~ → done (lean FSM + combat loop as of 0.46)
+2. Multiplayer Infrastructure
+3. Additional Content
+4. Performance Optimization
 
 ### Major Bot System Fixes (December 2024)
 

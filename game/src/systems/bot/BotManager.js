@@ -96,67 +96,75 @@ export class BotManager {
      * Initialize bot manager with game
      */
     initialize(mapSettings = {}) {
-        // Store map settings
         this.mapSettings = mapSettings;
-        
-        // Set up spawn points
+
+        // Clear previous match spawn data
+        this.spawnPoints = [];
+        this.teamSpawnPoints = { red: [], blue: [] };
+
         this.setupSpawnPoints();
-        
-        // Set up event listeners
         this.setupEventListeners();
-        
-        // Create initial bots based on settings
         this.createInitialBots();
-        
+
         console.log('BotManager initialized with', this.bots.size, 'bots and settings:', mapSettings);
     }
-    
+
     /**
      * Set up spawn points
      */
     setupSpawnPoints() {
-        // Get spawn points from arena data
+        this.spawnPoints = [];
+        this.teamSpawnPoints = { red: [], blue: [] };
+
         const arena = this.game.arenaData;
+        let loadedTeamSpawns = false;
+
         if (arena) {
-            // Use bot spawn areas if available
             if (arena.botSpawnAreas) {
-                // Add red team spawns
-                arena.botSpawnAreas.red.forEach(spawn => {
-                    this.spawnPoints.push(new THREE.Vector3(spawn.x, spawn.y, spawn.z));
-                    this.teamSpawnPoints.red.push(new THREE.Vector3(spawn.x, spawn.y, spawn.z));
+                (arena.botSpawnAreas.red || []).forEach(spawn => {
+                    const v = new THREE.Vector3(spawn.x, spawn.y, spawn.z);
+                    this.spawnPoints.push(v.clone());
+                    this.teamSpawnPoints.red.push(v);
                 });
-                
-                // Add blue team spawns
-                arena.botSpawnAreas.blue.forEach(spawn => {
-                    this.spawnPoints.push(new THREE.Vector3(spawn.x, spawn.y, spawn.z));
-                    this.teamSpawnPoints.blue.push(new THREE.Vector3(spawn.x, spawn.y, spawn.z));
+                (arena.botSpawnAreas.blue || []).forEach(spawn => {
+                    const v = new THREE.Vector3(spawn.x, spawn.y, spawn.z);
+                    this.spawnPoints.push(v.clone());
+                    this.teamSpawnPoints.blue.push(v);
                 });
+                loadedTeamSpawns = this.teamSpawnPoints.red.length > 0 ||
+                    this.teamSpawnPoints.blue.length > 0;
             }
-            
-            // Fallback to general spawn points
+
             if (this.spawnPoints.length === 0 && arena.spawnPoints) {
                 arena.spawnPoints.forEach(spawn => {
                     this.spawnPoints.push(new THREE.Vector3(spawn.x, spawn.y, spawn.z));
                 });
             }
         }
-        
-        // Default spawn points if none found
+
         if (this.spawnPoints.length === 0) {
             this.spawnPoints = [
-                new THREE.Vector3(10, 0, 10),
-                new THREE.Vector3(-10, 0, 10),
-                new THREE.Vector3(10, 0, -10),
-                new THREE.Vector3(-10, 0, -10),
-                new THREE.Vector3(0, 0, 15),
-                new THREE.Vector3(0, 0, -15),
-                new THREE.Vector3(15, 0, 0),
-                new THREE.Vector3(-15, 0, 0)
+                new THREE.Vector3(10, 1, 10),
+                new THREE.Vector3(-10, 1, 10),
+                new THREE.Vector3(10, 1, -10),
+                new THREE.Vector3(-10, 1, -10),
+                new THREE.Vector3(0, 1, 15),
+                new THREE.Vector3(0, 1, -15),
+                new THREE.Vector3(15, 1, 0),
+                new THREE.Vector3(-15, 1, 0)
             ];
         }
-        
-        // Distribute spawn points between teams
-        this.distributeSpawnPoints();
+
+        // Only split general spawns when team areas were not provided
+        if (!loadedTeamSpawns) {
+            this.distributeSpawnPoints();
+        }
+
+        console.log('Spawn points ready:', {
+            red: this.teamSpawnPoints.red.length,
+            blue: this.teamSpawnPoints.blue.length,
+            total: this.spawnPoints.length
+        });
     }
     
     /**
@@ -232,7 +240,10 @@ export class BotManager {
             // Move player to a random spawn point for their team
             const randomSpawn = teamSpawns[Math.floor(Math.random() * teamSpawns.length)];
             this.game.player.mesh.position.set(randomSpawn.x, randomSpawn.y, randomSpawn.z);
-            
+            if (this.game.player.setSpawnPoint) {
+                this.game.player.setSpawnPoint(randomSpawn);
+            }
+
             // Update player color based on team
             this.updatePlayerTeamColor();
         }
@@ -243,14 +254,21 @@ export class BotManager {
      */
     updatePlayerTeamColor() {
         if (!this.game.player || !this.game.player.mesh) return;
-        
+
         const teamColor = this.game.player.team === 'red' ? 0xff0000 : 0x0000ff;
-        
-        // Update the player's mesh color
+
+        // Only tint the third-person body — never the camera-mounted viewmodel
         this.game.player.mesh.traverse((child) => {
-            if (child.isMesh && child.material) {
-                child.material.color.setHex(teamColor);
+            if (!child.isMesh || !child.material || !child.material.color) return;
+            if (child.isCamera || child.type === 'PerspectiveCamera') return;
+            // Skip anything under the FPS camera (gun/arm)
+            let p = child.parent;
+            while (p) {
+                if (p.isCamera || p.name === 'glockViewmodel') return;
+                p = p.parent;
             }
+            if (child.userData?.skipTeamColor) return;
+            child.material.color.setHex(teamColor);
         });
     }
     
@@ -262,45 +280,25 @@ export class BotManager {
             console.warn('Maximum bot count reached');
             return null;
         }
-        
+
         const botId = `bot_${this.botCounter++}`;
         const bot = new Bot(this.game, botId, difficulty, team);
-        
-        // Set spawn position
+
         const spawnPoint = this.getSpawnPoint(team);
-        
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/a54cc6ed-de47-439c-aed6-cbc76d8a46bc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BotManager.js:270',message:'createBot: got spawn point',data:{botId,team,spawnPoint:{x:spawnPoint?.x,y:spawnPoint?.y,z:spawnPoint?.z},spawnPointExists:!!spawnPoint},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'E'})}).catch(()=>{});
-        // #endregion
-        
-        // Adjust spawn point Y to be above the ground
-        // Arena ground is at y=-2 to 0, character model has body at y=1.0, so spawn at y=1.0 to be above ground
-        spawnPoint.y = 1.0; // Above ground level (character model offset)
-        
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/a54cc6ed-de47-439c-aed6-cbc76d8a46bc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BotManager.js:273',message:'createBot: adjusted spawn Y, calling setPosition',data:{botId,spawnPoint:{x:spawnPoint.x,y:spawnPoint.y,z:spawnPoint.z}},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'E'})}).catch(()=>{});
-        // #endregion
-        
+        spawnPoint.y = 1.0;
         bot.setPosition(spawnPoint);
-        
-        // Debug: Log bot spawn position
+
         console.log(`Bot ${botId} spawned at: ${spawnPoint.x.toFixed(1)}, ${spawnPoint.y.toFixed(1)}, ${spawnPoint.z.toFixed(1)}`);
-        
-        // Store bot
+
         this.bots.set(botId, bot);
-        
-        // Add bot to update groups immediately
         this.updateBotGroups();
-        
-        // Update statistics
+
         this.stats.totalBotsCreated++;
         this.stats.activeBots = this.bots.size;
-        
-        // Emit event
+
         this.emit('botCreated', { bot, team, difficulty });
-        
         console.log(`Bot ${botId} created for team ${team} with difficulty ${difficulty}`);
-        
+
         return bot;
     }
     
@@ -336,27 +334,17 @@ export class BotManager {
      * Get spawn point for team
      */
     getSpawnPoint(team) {
-        const teamSpawns = this.teamSpawnPoints[team];
-        
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/a54cc6ed-de47-439c-aed6-cbc76d8a46bc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BotManager.js:328',message:'getSpawnPoint: called',data:{team,teamSpawnsLength:teamSpawns?.length||0,generalSpawnsLength:this.spawnPoints?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'F'})}).catch(()=>{});
-        // #endregion
-        
+        const teamSpawns = this.teamSpawnPoints[team] || [];
+
+        let selected;
         if (teamSpawns.length === 0) {
-            // Fallback to general spawn points
-            const fallbackSpawn = this.spawnPoints[Math.floor(Math.random() * this.spawnPoints.length)];
-            // #region agent log
-            fetch('http://127.0.0.1:7243/ingest/a54cc6ed-de47-439c-aed6-cbc76d8a46bc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BotManager.js:332',message:'getSpawnPoint: returning fallback',data:{team,fallbackSpawn:{x:fallbackSpawn?.x,y:fallbackSpawn?.y,z:fallbackSpawn?.z}},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'F'})}).catch(()=>{});
-            // #endregion
-            return fallbackSpawn;
+            selected = this.spawnPoints[Math.floor(Math.random() * this.spawnPoints.length)];
+        } else {
+            selected = teamSpawns[Math.floor(Math.random() * teamSpawns.length)];
         }
-        
-        // Return random spawn point for team
-        const selectedSpawn = teamSpawns[Math.floor(Math.random() * teamSpawns.length)];
-        // #region agent log
-        fetch('http://127.0.0.1:7243/ingest/a54cc6ed-de47-439c-aed6-cbc76d8a46bc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'BotManager.js:336',message:'getSpawnPoint: returning team spawn',data:{team,selectedSpawn:{x:selectedSpawn?.x,y:selectedSpawn?.y,z:selectedSpawn?.z}},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'F'})}).catch(()=>{});
-        // #endregion
-        return selectedSpawn;
+
+        // Always clone so callers can mutate Y without corrupting shared spawns
+        return selected ? selected.clone() : new THREE.Vector3(0, 1, 0);
     }
     
     /**
@@ -463,7 +451,7 @@ export class BotManager {
         });
 
         // Debug: Log group counts occasionally
-        if (this.game.frameCount % 60 === 0) {
+        if (window.DEBUG_BOT_MOVEMENT && this.game.frameCount % 60 === 0) {
             console.log(`Bot Groups - High: ${this.updateGroups.high.length}, Medium: ${this.updateGroups.medium.length}, Low: ${this.updateGroups.low.length}`);
         }
         
@@ -490,15 +478,17 @@ export class BotManager {
      * Handle bot death
      */
     handleBotDeath(bot) {
-        // Emit event
+        // Prevent scheduling a respawn every frame while dead
+        if (bot._deathHandled) return;
+        bot._deathHandled = true;
+
         this.emit('botDeath', { bot });
-        
-        // Schedule respawn
+
         setTimeout(() => {
             if (this.bots.has(bot.id)) {
                 this.respawnBot(bot);
             }
-        }, 5000); // 5 second respawn delay
+        }, 5000);
     }
     
     /**
@@ -546,14 +536,14 @@ export class BotManager {
      */
     respawnBot(bot) {
         if (!this.bots.has(bot.id)) return;
-        
-        // Reset bot state
+
         bot.respawn();
-        
-        // Set spawn position
+
         const spawnPoint = this.getSpawnPoint(bot.team);
+        spawnPoint.y = 1.0;
         bot.setPosition(spawnPoint);
-        
+        bot.activate();
+
         console.log(`Bot ${bot.id} respawned`);
     }
     
@@ -770,6 +760,9 @@ export class BotManager {
     clearAllBots() {
         const botIds = Array.from(this.bots.keys());
         botIds.forEach(botId => this.removeBot(botId));
+        this.spawnPoints = [];
+        this.teamSpawnPoints = { red: [], blue: [] };
+        this.updateGroups = { high: [], medium: [], low: [] };
     }
     
     /**
